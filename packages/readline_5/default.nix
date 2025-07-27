@@ -12,6 +12,11 @@ stdenv.mkDerivation rec {
 
   patches = [ ./gnu_patches.patch ];
 
+  postConfigure = ''
+    sed -i -e '$a#define _XOPEN_SOURCE 500' config.h
+    sed -i -e '$a#define _POSIX_C_SOURCE 200112L' config.h
+  '';
+
   meta = with lib; {
     branch = "5";
     platforms = platforms.unix;

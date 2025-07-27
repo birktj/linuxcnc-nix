@@ -128,7 +128,12 @@ stdenv.mkDerivation rec {
     "--with-boost-python=boost_python3"
     "--with-locale-dir=$(out)/locale"
     "--exec-prefix=${placeholder "out"}"
+    # "--enable-non-distributable=yes"
   ];
+
+  postConfigure = ''
+    substituteInPlace Makefile --replace 'gnu++11' 'gnu++14'
+  '';
 
   preInstall = ''
     # Stop the Makefile attempting to set ownship+perms, it fails on NixOS
@@ -139,6 +144,8 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     mkdir -p "$out/firmware/hm2"
+    ln -s "$out/share/linuxcnc/ncfiles" "$out/share/doc/linuxcnc/examples/nc_files"
+    rm -rf "$out/share/doc/linuxcnc/examples/sample-configs/sim/axis/orphans"
   '';
 
   # Binaries listed here are renamed to ${filename}-nosetuid, to be targetted by setuid wrappers

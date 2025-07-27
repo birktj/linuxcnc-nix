@@ -1,0 +1,22 @@
+--- a/support/wcwidth.c	2002-01-10 14:36:26.000000000 +0100
++++ b/support/wcwidth.c	2025-07-27 19:31:25.391806494 +0200
+@@ -6,6 +6,7 @@
+  * Markus Kuhn -- 2001-09-08 -- public domain
+  */
+ 
++#define _XOPEN_SOURCE
+ #include <wchar.h>
+ 
+ struct interval {
+
+
+--- a/rlmbutil.h	2006-09-12 22:44:38.000000000 +0200
++++ b/rlmbutil.h	2025-07-27 19:39:26.800528785 +0200
+@@ -33,6 +33,7 @@
+    support user defined character classes.  */
+    /* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
+ #if defined (HAVE_WCTYPE_H) && defined (HAVE_WCHAR_H) && defined (HAVE_LOCALE_H)
++#  define _XOPEN_SOURCE
+ #  include <wchar.h>
+ #  include <wctype.h>
+ #  if defined (HAVE_ISWCTYPE) && \
