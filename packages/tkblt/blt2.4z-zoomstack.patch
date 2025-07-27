@@ -1,0 +1,28 @@
+--- blt2.4z/library/Makefile.in.orig	2010-01-09 16:51:18.000000000 -0800
++++ blt2.4z/library/Makefile.in	2010-01-09 16:50:57.000000000 -0800
+@@ -29,6 +29,7 @@
+ 		tabnotebook.tcl \
+ 		tabset.tcl \
+ 		treeview.tcl \
++		ZoomStack.itcl \
+ 		tclIndex \
+ 		$(cursors)
+ 
+--- blt2.4z/library/ZoomStack.itcl.orig	2010-01-09 19:23:15.000000000 -0800
++++ blt2.4z/library/ZoomStack.itcl	2010-01-09 19:25:10.000000000 -0800
+@@ -1,4 +1,6 @@
+-import add itcl
++#import add itcl
++package require Itcl
++namespace import itcl::*
+ 
+ class ZoomStackGraph {
+ 
+@@ -48,6 +50,7 @@
+     private method SaveCoords { x y } 
+     private method Zoom {}
+     private method Unzoom {}
++    private method Empty { }
+     private method Push { cmd }
+     private method Pop {}
+     private method MarkPoint { x y }

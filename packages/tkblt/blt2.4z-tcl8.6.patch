@@ -1,11 +1,22 @@
-Description: Patch replaces the direct usage of deprecated interp->result
-    by Tcl_SetResult() and Tcl_GetStringResult() calls making it possible
-    to build using Tcl/Tk 8.6.
-Last-Modified: Fri, 04 Jul 2014 09:20:48 +0400
-
---- a/generic/bltScrollbar.c
-+++ b/generic/bltScrollbar.c
-@@ -588,7 +588,7 @@
+diff -urp blt2.4z/src/bltInt.h blt2.4z-tcl8.6/src/bltInt.h
+--- blt2.4z/src/bltInt.h	2002-08-22 03:13:12.000000000 +0700
++++ blt2.4z-tcl8.6/src/bltInt.h	2014-05-30 11:07:01.453354590 +0700
+@@ -26,6 +26,11 @@
+ #ifndef _BLT_INT_H
+ #define _BLT_INT_H
+ 
++#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
++#define Tcl_GetStringResult(interp) interp->result
++#define Tcl_SetResult(interp,val,val2) interp->result = val
++#endif
++
+ #ifdef WIN32
+ #define STRICT
+ #define WIN32_LEAN_AND_MEAN
+diff -urp blt2.4z/src/bltScrollbar.c blt2.4z-tcl8.6/src/bltScrollbar.c
+--- blt2.4z/src/bltScrollbar.c	2002-07-18 05:38:54.000000000 +0700
++++ blt2.4z-tcl8.6/src/bltScrollbar.c	2014-05-30 11:11:20.816689753 +0700
+@@ -534,7 +534,7 @@ ScrollbarWidgetCmd(clientData, interp, a
  	} else {
  	    fraction = ((double)pixels / (double)barWidth);
  	}
@@ -14,38 +25,40 @@ Last-Modified: Fri, 04 Jul 2014 09:20:48 +0400
      } else if ((c == 'f') && (strncmp(argv[1], "fraction", length) == 0)) {
  	int x, y, pos, barWidth;
  	double fraction;
---- a/generic/bltTed.c
-+++ b/generic/bltTed.c
-@@ -1504,7 +1504,7 @@
+diff -urp blt2.4z/src/bltTed.c blt2.4z-tcl8.6/src/bltTed.c
+--- blt2.4z/src/bltTed.c	2002-05-17 03:46:00.000000000 +0700
++++ blt2.4z-tcl8.6/src/bltTed.c	2014-05-30 11:10:17.774560163 +0700
+@@ -1504,7 +1504,7 @@ EditOp(dataPtr, interp, argc, argv)
  	tablePtr->flags |= ARRANGE_PENDING;
  	Tcl_DoWhenIdle(tablePtr->arrangeProc, tablePtr);
      }
 -    interp->result = Tk_PathName(tedPtr->tkwin);
-+    Tcl_SetResult(interp, (char*)Tk_PathName(tedPtr->tkwin), TCL_VOLATILE);
++    Tcl_SetResult(interp, Tk_PathName(tedPtr->tkwin), TCL_STATIC);
      tedPtr->flags |= LAYOUT_PENDING;
      EventuallyRedraw(tedPtr);
      return TCL_OK;
-@@ -1678,7 +1678,7 @@
+@@ -1678,7 +1678,7 @@ SelectOp(dataPtr, interp, argc, argv)
  	    tedPtr->activeRectArr[4].width = grip - 1;
  	    tedPtr->activeRectArr[4].height = grip - 1;
  
 -	    interp->result = Tk_PathName(entryPtr->tkwin);
-+	    Tcl_SetResult(interp, (char*)Tk_PathName(entryPtr->tkwin), TCL_VOLATILE);
++	    Tcl_SetResult(interp, Tk_PathName(tedPtr->tkwin), TCL_STATIC);
  	    active = 1;
  	    break;
  	}
-@@ -1751,7 +1751,7 @@
+@@ -1751,7 +1751,7 @@ RepOp(dataPtr, interp, argc, argv)
  	tablePtr->flags |= ARRANGE_PENDING;
  	Tcl_DoWhenIdle(tablePtr->arrangeProc, tablePtr);
      }
 -    interp->result = Tk_PathName(tedPtr->tkwin);
-+    Tcl_SetResult(interp, (char*)Tk_PathName(tedPtr->tkwin), TCL_VOLATILE);
++    Tcl_SetResult(interp, Tk_PathName(tedPtr->tkwin), TCL_STATIC);
      tedPtr->flags |= LAYOUT_PENDING;
      EventuallyRedraw(tedPtr);
      return TCL_OK;
---- a/generic/bltVecMath.c
-+++ b/generic/bltVecMath.c
-@@ -834,20 +834,20 @@
+diff -urp blt2.4z/src/bltVecMath.c blt2.4z-tcl8.6/src/bltVecMath.c
+--- blt2.4z/src/bltVecMath.c	2002-09-10 12:12:33.000000000 +0700
++++ blt2.4z-tcl8.6/src/bltVecMath.c	2014-05-30 11:12:53.846381976 +0700
+@@ -764,20 +764,20 @@ MathError(interp, value)
      if ((errno == EDOM) || (value != value)) {
  	Tcl_AppendResult(interp, "domain error: argument not in valid range",
  	    (char *)NULL);
@@ -69,7 +82,7 @@ Last-Modified: Fri, 04 Jul 2014 09:20:48 +0400
  		(char *)NULL);
  	}
      } else {
-@@ -856,7 +856,7 @@
+@@ -786,7 +786,7 @@ MathError(interp, value)
  	sprintf(buf, "%d", errno);
  	Tcl_AppendResult(interp, "unknown floating-point error, ",
  	    "errno = ", buf, (char *)NULL);
@@ -78,14 +91,15 @@ Last-Modified: Fri, 04 Jul 2014 09:20:48 +0400
  	    (char *)NULL);
      }
  }
---- a/generic/bltTreeCmd.c
-+++ b/generic/bltTreeCmd.c
-@@ -8560,7 +8560,7 @@
-         if (result == TCL_CONTINUE ) continue;
- 	if (result == TCL_ERROR) {
-             Tcl_AppendResult(interp,
--            "\n    (\"tree foreach\" body line ", Blt_Itoa(interp->errorLine), ")\n", 0);
-+            "\n    (\"tree foreach\" body line ", Blt_Itoa(Tcl_GetErrorLine(interp)), ")\n", 0);
-              break;
-         }
-         if (result != TCL_OK) {
+diff -urp blt2.4z/src/tkScrollbar.c blt2.4z-tcl8.6/src/tkScrollbar.c
+--- blt2.4z/src/tkScrollbar.c	2002-05-17 03:46:01.000000000 +0700
++++ blt2.4z-tcl8.6/src/tkScrollbar.c	2014-05-30 11:13:40.004747237 +0700
+@@ -533,7 +533,7 @@ ScrollbarWidgetCmd(clientData, interp, a
+ 	} else {
+ 	    fraction = ((double)pixels / (double)barWidth);
+ 	}
+-	sprintf(interp->result, "%g", fraction);
++	sprintf(Tcl_GetStringResult(interp), "%g", fraction);
+     } else if ((c == 'f') && (strncmp(argv[1], "fraction", length) == 0)) {
+ 	int x, y, pos, barWidth;
+ 	double fraction;

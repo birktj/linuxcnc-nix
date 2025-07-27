@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-25.05";
     flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
   };
   outputs = { self, nixpkgs, flake-compat }@inputs:

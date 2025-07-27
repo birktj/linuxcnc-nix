@@ -1,19 +1,31 @@
-{ lib, fetchzip, tcl, tk, xorg }:
+{ lib, fetchurl, tcl, tk, xorg }:
 tcl.mkTclDerivation rec {
   pname = "tkblt";
-  version = "2.5.3";
+  version = "2.4";
 
-  src = fetchzip {
-    url = "http://deb.debian.org/debian/pool/main/b/blt/blt_2.5.3+dfsg.orig.tar.xz";
-    sha256 = "3a9zfTTzOo7HRxAl/6RW8cAxaW/YtnsDb5aV1lyKMVw=";
+  src = fetchurl {
+    url = "http://downloads.sourceforge.net/blt/BLT2.4z.tar.gz";
+    sha256 = "sha256-becF7M8uxna0Bxt07J4hHFkEd/rfbwVWbP2O1qA8YNo=";
   };
 
   patches = [
-    ./tcl8.6.patch
-    ./tk8.6.patch
-    ./install.patch
-    ./ldflags.patch
+    ./blt2.4z-patch-2
+    ./blt2.4z-patch-64
+    ./blt2.4-tk8.5.patch
+    ./blt2.4z-destdir.patch
+    ./blt2.4z-norpath.patch
+    ./blt2.4z-noexactversion.patch
+    ./blt2.4z-zoomstack.patch
+    ./blt2.4z-tk8.5.6-patch
+    ./blt2.4z-tcl8.6.patch
+    ./blt2.4z-tk8.6.patch
+    ./blt-configure-c99.patch
   ];
+
+  postPatch = ''
+    mv man/graph.mann man/bltgraph.mann
+	  mv man/bitmap.mann man/bltbitmap.mann
+  '';
 
   meta = {
     homepage = "https://sourceforge.net/projects/wize/";
@@ -33,8 +45,8 @@ tcl.mkTclDerivation rec {
     "--x-libraries=${xorg.libX11}/lib"
   ];
 
-  preFixup = ''
-    substituteInPlace $out/lib/blt2.5/pkgIndex.tcl --replace 'package ifneeded BLT $version' 'package ifneeded BLT ${version}'
-  '';
+  # preFixup = ''
+  #   substituteInPlace $out/lib/blt2.5/pkgIndex.tcl --replace 'package ifneeded BLT $version' 'package ifneeded BLT ${version}'
+  # '';
 
 }

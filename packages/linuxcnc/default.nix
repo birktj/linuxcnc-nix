@@ -1,7 +1,47 @@
-{ lib, stdenv, autoreconfHook, wrapGAppsHook, qt5, makeWrapper, fetchFromGitHub, libtool, pkgconfig,
-  readline_5, ncurses, libtirpc, systemd, libmodbus, libusb, glib, gtk2, gtk3, procps, kmod, sysctl,
-  util-linux, psmisc, intltool, tcl, tk, bwidget, tkimg, tclx, tkblt, pango, cairo, boost, espeak, gst_all_1,
-  python3Full, yapps, gobject-introspection, libGLU, xorg, libepoxy, hicolor-icon-theme, glxinfo, bash
+{ lib,
+  stdenv,
+  autoreconfHook,
+  wrapGAppsHook,
+  qt5,
+  makeWrapper,
+  fetchFromGitHub,
+  libtool,
+  pkg-config,
+  readline_5,
+  ncurses,
+  libtirpc,
+  systemd,
+  libmodbus,
+  libusb1,
+  glib,
+  gtk2,
+  gtk3,
+  procps,
+  kmod,
+  sysctl,
+  util-linux,
+  psmisc,
+  intltool,
+  tcl,
+  tk,
+  bwidget,
+  tkimg,
+  tclx,
+  tkblt,
+  pango,
+  cairo,
+  boost,
+  espeak,
+  gst_all_1,
+  python3Full,
+  yapps,
+  gobject-introspection,
+  libGLU,
+  xorg,
+  libepoxy,
+  hicolor-icon-theme,
+  glxinfo,
+  bash
 }:
 let
   pythonPkg = (python3Full.withPackages (ps: [
@@ -46,7 +86,7 @@ stdenv.mkDerivation rec {
   dontWrapQtApps = true;
 
   buildInputs = [
-    libtool pkgconfig libtirpc systemd libmodbus libusb glib gtk2 gtk3 procps kmod sysctl util-linux
+    libtool pkg-config libtirpc systemd libmodbus libusb1 glib gtk2 gtk3 procps kmod sysctl util-linux
     psmisc intltool tcl tk bwidget tkimg tclx tkblt pango cairo pythonPkg.pkgs.pygobject3 gobject-introspection
     boost_python pythonPkg.pkgs.boost pythonPkg qt5.qtbase espeak gst_all_1.gstreamer
     ncurses readline_5 libGLU xorg.libXmu libepoxy hicolor-icon-theme glxinfo

@@ -1,0 +1,29 @@
+diff -urp blt2.4z/src/tkButton.c blt2.4z-tk8.6/src/tkButton.c
+--- blt2.4z/src/tkButton.c	2002-09-23 14:19:01.000000000 +0700
++++ blt2.4z-tk8.6/src/tkButton.c	2014-05-30 11:40:43.259449225 +0700
+@@ -526,8 +526,6 @@ static int InvokeButton _ANSI_ARGS_((But
+ static Blt_TileChangedProc TileChangedProc;
+ static Tcl_CmdProc ButtonCmd, LabelCmd, CheckbuttonCmd, RadiobuttonCmd;
+ 
+-EXTERN int TkCopyAndGlobalEval _ANSI_ARGS_((Tcl_Interp *interp, char *script));
+-
+ #if (TK_MAJOR_VERSION > 4)
+ EXTERN void TkComputeAnchor _ANSI_ARGS_((Tk_Anchor anchor, Tk_Window tkwin, 
+ 	int padX, int padY, int innerWidth, int innerHeight, int *xPtr, 
+@@ -1890,7 +1888,15 @@ InvokeButton(butPtr)
+ 	}
+     }
+     if ((butPtr->type != TYPE_LABEL) && (butPtr->command != NULL)) {
+-	return TkCopyAndGlobalEval(butPtr->interp, butPtr->command);
++	Tcl_DString buffer;
++    int code;
++
++    Tcl_DStringInit(&buffer);
++    Tcl_DStringAppend(&buffer, butPtr->command, -1);
++    code = Tcl_EvalEx(butPtr->interp, Tcl_DStringValue(&buffer),
++	    Tcl_DStringLength(&buffer), TCL_EVAL_GLOBAL);
++    Tcl_DStringFree(&buffer);
++    return code;
+     }
+     return TCL_OK;
+ }

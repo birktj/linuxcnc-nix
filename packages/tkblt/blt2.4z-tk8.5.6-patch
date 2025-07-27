@@ -1,0 +1,2115 @@
+diff -cr blt2.4z/src/bltAlloc.c blt2.4zYUM/src/bltAlloc.c
+*** blt2.4z/src/bltAlloc.c	2002-07-22 18:44:36.000000000 -0400
+--- blt2.4zYUM/src/bltAlloc.c	2009-11-18 09:54:04.168032898 -0500
+***************
+*** 40,53 ****
+   * Tcl_Alloc/Tcl_Free routines because they don't automatically cause
+   * a panic when not enough memory is available. There are cases (such 
+   * as allocating a very large vector) where it's recoverable.
+   */
+! EXTERN Blt_MallocProc TclpAlloc;
+! EXTERN Blt_FreeProc TclpFree;
+! EXTERN Blt_ReallocProc TclpRealloc;
+! 
+! Blt_MallocProc *Blt_MallocProcPtr = TclpAlloc;
+! Blt_FreeProc *Blt_FreeProcPtr = TclpFree; 
+! Blt_ReallocProc *Blt_ReallocProcPtr = TclpRealloc; 
+  #else
+  
+  Blt_MallocProc *Blt_MallocProcPtr = malloc;
+--- 40,62 ----
+   * Tcl_Alloc/Tcl_Free routines because they don't automatically cause
+   * a panic when not enough memory is available. There are cases (such 
+   * as allocating a very large vector) where it's recoverable.
++  *
++  * Using private is dangerous.
++  * Tcl changes mem functions for debug which will conflict then with BLT
++  * stick to public API
+   */
+! //EXTERN Blt_MallocProc TclpAlloc;
+! //EXTERN Blt_FreeProc TclpFree;
+! //EXTERN Blt_ReallocProc TclpRealloc;
+! 
+! //Blt_MallocProc *Blt_MallocProcPtr = TclpAlloc;
+! //Blt_FreeProc *Blt_FreeProcPtr = TclpFree; 
+! //Blt_ReallocProc *Blt_ReallocProcPtr = TclpRealloc;
+! 
+! Blt_MallocProc *Blt_MallocProcPtr = (Blt_MallocProc *)Tcl_Alloc;
+! Blt_FreeProc *Blt_FreeProcPtr = (Blt_FreeProc *)Tcl_Free; 
+! Blt_ReallocProc *Blt_ReallocProcPtr = (Blt_ReallocProc *)Tcl_Realloc; 
+! 
+  #else
+  
+  Blt_MallocProc *Blt_MallocProcPtr = malloc;
+diff -cr blt2.4z/src/bltBitmap.c blt2.4zYUM/src/bltBitmap.c
+*** blt2.4z/src/bltBitmap.c	2002-08-13 15:45:18.000000000 -0400
+--- blt2.4zYUM/src/bltBitmap.c	2009-11-20 15:15:04.880031286 -0500
+***************
+*** 917,923 ****
+      info.padLeft = info.padRight = 0;
+      info.padTop = info.padBottom = 0;
+      info.font = (Tk_Font)NULL;	/* Initialized by Tk_ConfigureWidget */
+!     if (Tk_ConfigureWidget(interp, tkwin, composeConfigSpecs,
+  	    argc - 4, argv + 4, (char *)&info, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 917,923 ----
+      info.padLeft = info.padRight = 0;
+      info.padTop = info.padBottom = 0;
+      info.font = (Tk_Font)NULL;	/* Initialized by Tk_ConfigureWidget */
+!     if (Blt_ConfigureWidget(interp, tkwin, composeConfigSpecs,
+  	    argc - 4, argv + 4, (char *)&info, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 1027,1033 ****
+      /* Initialize info and then process flags */
+      info.rotate = 0.0;		/* No rotation by default */
+      info.scale = 1.0;		/* No scaling by default */
+!     if (Tk_ConfigureWidget(interp, dataPtr->tkwin, defineConfigSpecs,
+  	    argc - 4, argv + 4, (char *)&info, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1027,1033 ----
+      /* Initialize info and then process flags */
+      info.rotate = 0.0;		/* No rotation by default */
+      info.scale = 1.0;		/* No scaling by default */
+!     if (Blt_ConfigureWidget(interp, dataPtr->tkwin, defineConfigSpecs,
+  	    argc - 4, argv + 4, (char *)&info, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltBusy.c blt2.4zYUM/src/bltBusy.c
+*** blt2.4z/src/bltBusy.c	2002-07-12 18:29:28.000000000 -0400
+--- blt2.4zYUM/src/bltBusy.c	2009-11-20 15:15:31.217031320 -0500
+***************
+*** 418,424 ****
+      Tk_Cursor oldCursor;
+  
+      oldCursor = busyPtr->cursor;
+!     if (Tk_ConfigureWidget(interp, busyPtr->tkRef, configSpecs, argc, argv,
+  	    (char *)busyPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 418,424 ----
+      Tk_Cursor oldCursor;
+  
+      oldCursor = busyPtr->cursor;
+!     if (Blt_ConfigureWidget(interp, busyPtr->tkRef, configSpecs, argc, argv,
+  	    (char *)busyPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltCanvEps.c blt2.4zYUM/src/bltCanvEps.c
+*** blt2.4z/src/bltCanvEps.c	2002-08-15 01:22:10.000000000 -0400
+--- blt2.4zYUM/src/bltCanvEps.c	2009-11-20 15:15:56.081031268 -0500
+***************
+*** 1054,1060 ****
+      int width, height;
+  
+      tkwin = Tk_CanvasTkwin(canvas);
+!     if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc,
+  	    argv, (char *)epsPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1054,1060 ----
+      int width, height;
+  
+      tkwin = Tk_CanvasTkwin(canvas);
+!     if (Blt_ConfigureWidget(interp, tkwin, configSpecs, argc,
+  	    argv, (char *)epsPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 1686,1695 ****
+  {
+      "eps",			/* name */
+      sizeof(EpsItem),		/* itemSize */
+!     CreateEps,			/* createProc */
+      configSpecs,		/* configSpecs */
+!     ConfigureEps,		/* configureProc */
+!     EpsCoords,			/* coordProc */
+      DeleteEps,			/* deleteProc */
+      DisplayEps,			/* displayProc */
+      0,				/* alwaysRedraw */
+--- 1686,1695 ----
+  {
+      "eps",			/* name */
+      sizeof(EpsItem),		/* itemSize */
+!     (Tk_ItemCreateProc *)CreateEps,			/* createProc */
+      configSpecs,		/* configSpecs */
+!     (Tk_ItemConfigureProc *)ConfigureEps,		/* configureProc */
+!     (Tk_ItemCoordProc *)EpsCoords,			/* coordProc */
+      DeleteEps,			/* deleteProc */
+      DisplayEps,			/* displayProc */
+      0,				/* alwaysRedraw */
+***************
+*** 1713,1718 ****
+  {
+      Tk_CreateItemType(&epsItemType);
+      /* Initialize custom canvas option routines. */
+!     tagsOption.parseProc = Tk_CanvasTagsParseProc;
+!     tagsOption.printProc = Tk_CanvasTagsPrintProc;
+  }
+--- 1713,1718 ----
+  {
+      Tk_CreateItemType(&epsItemType);
+      /* Initialize custom canvas option routines. */
+!     tagsOption.parseProc = (Tk_OptionParseProc *)Tk_CanvasTagsParseProc;
+!     tagsOption.printProc = (Tk_OptionPrintProc *)Tk_CanvasTagsPrintProc;
+  }
+diff -cr blt2.4z/src/bltConfig.c blt2.4zYUM/src/bltConfig.c
+*** blt2.4z/src/bltConfig.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltConfig.c	2009-11-23 09:52:25.106031239 -0500
+***************
+*** 1206,1211 ****
+--- 1206,1270 ----
+  }
+  
+  /*
++  * Tk_ConfigureWidget nolonger sets the TK_CONFIG_OPTION_SPECIFIED bit.
++  * Rather than convert all the BLT widgets to Tk_SetOptions,
++  * Blt_ConfigureWidget will serve as a wrapper for Tk_ConfigureWidget.
++  */
++ int
++ Blt_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
++     Tcl_Interp *interp;
++     Tk_Window tkwin;		/* Window to associate with component */
++     Tk_ConfigSpec *specs;
++     int argc;
++     char **argv;
++     char *widgRec;
++     int flags;
++ {
++   int i, nspec;
++   char *value;
++   char **valuesIn;
++   Tk_ConfigSpec *specPtr;
++ 
++   /* before configure get all the config values */
++   nspec = 0 ;
++   for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) nspec++;
++   valuesIn = (char**) Tcl_Alloc(nspec*sizeof(char*));
++ 
++   for (i=0, specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++, i++) {
++     if (Tk_ConfigureValue(interp, tkwin, specs, widgRec,
++ 			  specPtr->argvName, 0) != TCL_OK) {
++       return TCL_ERROR;
++     }
++     value = Tcl_GetStringResult(interp);
++     valuesIn[i] = (char*) Tcl_Alloc((strlen(value)+1)*sizeof(char));
++     strcpy(valuesIn[i], value);
++   }
++   /* configure */
++   if (Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags) !=
++       TCL_OK ) { return TCL_ERROR; }
++   /*
++     read back the new values and compare with inputs
++     set the TK_CONFIG_OPTION_SPECIFIED if value changed
++     clear that bit if the value didnt change
++   */
++   for (i=0, specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++, i++) {
++     if (Tk_ConfigureValue(interp, tkwin, specs, widgRec,
++ 			  specPtr->argvName, 0) != TCL_OK) {
++       return TCL_ERROR;
++     }
++     value = Tcl_GetStringResult(interp);
++     if ( strcmp(value, valuesIn[i]) ) {
++       specPtr->specFlags |= TK_CONFIG_OPTION_SPECIFIED;
++     } else {
++       specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
++     }
++     Tcl_Free((char*)valuesIn[i]);
++   }
++   Tcl_Free((char*)valuesIn);
++   return TCL_OK;
++ }
++ 
++ /*
+   *----------------------------------------------------------------------
+   *
+   * Blt_ConfigureWidgetComponent --
+***************
+*** 1275,1281 ****
+      Blt_Free(tempName);
+  
+      Tk_SetClass(tkwin, className);
+!     result = Tk_ConfigureWidget(interp, tkwin, specsPtr, argc, argv, widgRec,
+  	flags);
+      if (isTemporary) {
+  	Tk_DestroyWindow(tkwin);
+--- 1334,1340 ----
+      Blt_Free(tempName);
+  
+      Tk_SetClass(tkwin, className);
+!     result = Blt_ConfigureWidget(interp, tkwin, specsPtr, argc, argv, widgRec,
+  	flags);
+      if (isTemporary) {
+  	Tk_DestroyWindow(tkwin);
+Only in blt2.4zYUM/src: bltConfig.h
+diff -cr blt2.4z/src/bltContainer.c blt2.4zYUM/src/bltContainer.c
+*** blt2.4z/src/bltContainer.c	2002-07-14 19:33:24.000000000 -0400
+--- blt2.4zYUM/src/bltContainer.c	2009-11-20 15:17:25.220031026 -0500
+***************
+*** 1169,1175 ****
+      GC newGC;
+      int width, height;
+  
+!     if (Tk_ConfigureWidget(interp, cntrPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)cntrPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1169,1175 ----
+      GC newGC;
+      int width, height;
+  
+!     if (Blt_ConfigureWidget(interp, cntrPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)cntrPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltDragdrop.c blt2.4zYUM/src/bltDragdrop.c
+*** blt2.4z/src/bltDragdrop.c	2002-07-18 02:35:32.000000000 -0400
+--- blt2.4zYUM/src/bltDragdrop.c	2009-11-20 15:18:01.716031214 -0500
+***************
+*** 1065,1071 ****
+      Token *tokenPtr;
+  
+      tokenPtr = &(srcPtr->token);
+!     if (Tk_ConfigureWidget(interp, srcPtr->tkwin, tokenConfigSpecs, argc, argv,
+  	    (char *)tokenPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1065,1071 ----
+      Token *tokenPtr;
+  
+      tokenPtr = &(srcPtr->token);
+!     if (Blt_ConfigureWidget(interp, srcPtr->tkwin, tokenConfigSpecs, argc, argv,
+  	    (char *)tokenPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 1293,1299 ****
+      /*
+       *  Handle the bulk of the options...
+       */
+!     if (Tk_ConfigureWidget(interp, srcPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)srcPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1293,1299 ----
+      /*
+       *  Handle the bulk of the options...
+       */
+!     if (Blt_ConfigureWidget(interp, srcPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)srcPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltGraph.c blt2.4zYUM/src/bltGraph.c
+*** blt2.4z/src/bltGraph.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltGraph.c	2009-11-20 15:14:00.752030524 -0500
+***************
+*** 926,932 ****
+      if (InitPens(graphPtr) != TCL_OK) {
+  	goto error;
+      }
+!     if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc - 2, argv + 2,
+  	    (char *)graphPtr, 0) != TCL_OK) {
+  	goto error;
+      }
+--- 926,932 ----
+      if (InitPens(graphPtr) != TCL_OK) {
+  	goto error;
+      }
+!     if (Blt_ConfigureWidget(interp, tkwin, configSpecs, argc - 2, argv + 2,
+  	    (char *)graphPtr, 0) != TCL_OK) {
+  	goto error;
+      }
+***************
+*** 1074,1080 ****
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  	    (char *)graphPtr, argv[2], flags);
+      } else {
+! 	if (Tk_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 2,
+  		argv + 2, (char *)graphPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+--- 1074,1080 ----
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  	    (char *)graphPtr, argv[2], flags);
+      } else {
+! 	if (Blt_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 2,
+  		argv + 2, (char *)graphPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+diff -cr blt2.4z/src/bltGrAxis.c blt2.4zYUM/src/bltGrAxis.c
+*** blt2.4z/src/bltGrAxis.c	2009-11-23 12:48:23.238030994 -0500
+--- blt2.4zYUM/src/bltGrAxis.c	2009-11-20 15:18:25.733030706 -0500
+***************
+*** 1268,1306 ****
+   * ----------------------------------------------------------------------
+   */
+  static double
+! NiceNum(x, round)
+      double x;
+!     int round;			/* If non-zero, round. Otherwise take ceiling
+  				 * of value. */
+  {
+      double expt;		/* Exponent of x */
+      double frac;		/* Fractional part of x */
+!     double nice;		/* Nice, rounded fraction */
+  
+      expt = floor(log10(x));
+      frac = x / EXP10(expt);	/* between 1 and 10 */
+!     if (round) {
+  	if (frac < 1.5) {
+! 	    nice = 1.0;
+  	} else if (frac < 3.0) {
+! 	    nice = 2.0;
+  	} else if (frac < 7.0) {
+! 	    nice = 5.0;
+  	} else {
+! 	    nice = 10.0;
+  	}
+      } else {
+  	if (frac <= 1.0) {
+! 	    nice = 1.0;
+  	} else if (frac <= 2.0) {
+! 	    nice = 2.0;
+  	} else if (frac <= 5.0) {
+! 	    nice = 5.0;
+  	} else {
+! 	    nice = 10.0;
+  	}
+      }
+!     return nice * EXP10(expt);
+  }
+  
+  static Ticks *
+--- 1268,1306 ----
+   * ----------------------------------------------------------------------
+   */
+  static double
+! NiceNum(x, iround)
+      double x;
+!     int iround;			/* If non-zero, round. Otherwise take ceiling
+  				 * of value. */
+  {
+      double expt;		/* Exponent of x */
+      double frac;		/* Fractional part of x */
+!     double dnice;		/* Nice, rounded fraction */
+  
+      expt = floor(log10(x));
+      frac = x / EXP10(expt);	/* between 1 and 10 */
+!     if (iround) {
+  	if (frac < 1.5) {
+! 	    dnice = 1.0;
+  	} else if (frac < 3.0) {
+! 	    dnice = 2.0;
+  	} else if (frac < 7.0) {
+! 	    dnice = 5.0;
+  	} else {
+! 	    dnice = 10.0;
+  	}
+      } else {
+  	if (frac <= 1.0) {
+! 	    dnice = 1.0;
+  	} else if (frac <= 2.0) {
+! 	    dnice = 2.0;
+  	} else if (frac <= 5.0) {
+! 	    dnice = 5.0;
+  	} else {
+! 	    dnice = 10.0;
+  	}
+      }
+!     return dnice * EXP10(expt);
+  }
+  
+  static Ticks *
+***************
+*** 3425,3431 ****
+  	return Tk_ConfigureInfo(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    (char *)axisPtr, argv[0], flags);
+      }
+!     if (Tk_ConfigureWidget(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)axisPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 3425,3431 ----
+  	return Tk_ConfigureInfo(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    (char *)axisPtr, argv[0], flags);
+      }
+!     if (Blt_ConfigureWidget(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)axisPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltGrElem.c blt2.4zYUM/src/bltGrElem.c
+*** blt2.4z/src/bltGrElem.c	2009-11-23 12:48:23.239030787 -0500
+--- blt2.4zYUM/src/bltGrElem.c	2009-11-20 15:19:29.029031092 -0500
+***************
+*** 1696,1702 ****
+      search.x = x;
+      search.y = y;
+  
+!     if (Tk_ConfigureWidget(interp, graphPtr->tkwin, closestSpecs, i - 6,
+  	    argv + 6, (char *)&search, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;	/* Error occurred processing an option. */
+      }
+--- 1696,1702 ----
+      search.x = x;
+      search.y = y;
+  
+!     if (Blt_ConfigureWidget(interp, graphPtr->tkwin, closestSpecs, i - 6,
+  	    argv + 6, (char *)&search, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;	/* Error occurred processing an option. */
+      }
+***************
+*** 1850,1856 ****
+  	    return Tk_ConfigureInfo(interp, graphPtr->tkwin, 
+  		elemPtr->specsPtr, (char *)elemPtr, options[0], flags);
+  	}
+! 	if (Tk_ConfigureWidget(interp, graphPtr->tkwin, elemPtr->specsPtr, 
+  		numOpts, options, (char *)elemPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+--- 1850,1856 ----
+  	    return Tk_ConfigureInfo(interp, graphPtr->tkwin, 
+  		elemPtr->specsPtr, (char *)elemPtr, options[0], flags);
+  	}
+! 	if (Blt_ConfigureWidget(interp, graphPtr->tkwin, elemPtr->specsPtr, 
+  		numOpts, options, (char *)elemPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+diff -cr blt2.4z/src/bltGrGrid.c blt2.4zYUM/src/bltGrGrid.c
+*** blt2.4z/src/bltGrGrid.c	2002-06-11 03:13:55.000000000 -0400
+--- blt2.4zYUM/src/bltGrGrid.c	2009-11-20 15:19:55.204031522 -0500
+***************
+*** 365,371 ****
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  	    (char *)gridPtr, argv[3], flags);
+      }
+!     if (Tk_ConfigureWidget(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    argc - 3, argv + 3, (char *)gridPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 365,371 ----
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  	    (char *)gridPtr, argv[3], flags);
+      }
+!     if (Blt_ConfigureWidget(graphPtr->interp, graphPtr->tkwin, configSpecs,
+  	    argc - 3, argv + 3, (char *)gridPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltGrHairs.c blt2.4zYUM/src/bltGrHairs.c
+*** blt2.4z/src/bltGrHairs.c	2002-06-17 19:07:19.000000000 -0400
+--- blt2.4zYUM/src/bltGrHairs.c	2009-11-20 15:20:11.908031189 -0500
+***************
+*** 390,396 ****
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)chPtr, argv[3], 0);
+      }
+!     if (Tk_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)chPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 390,396 ----
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)chPtr, argv[3], 0);
+      }
+!     if (Blt_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)chPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltGrLegd.c blt2.4zYUM/src/bltGrLegd.c
+*** blt2.4z/src/bltGrLegd.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltGrLegd.c	2009-11-20 15:20:34.501031087 -0500
+***************
+*** 1406,1412 ****
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)legendPtr, argv[3], flags);
+      }
+!     if (Tk_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)legendPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1406,1412 ----
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)legendPtr, argv[3], flags);
+      }
+!     if (Blt_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)legendPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltGrMarker.c blt2.4zYUM/src/bltGrMarker.c
+*** blt2.4z/src/bltGrMarker.c	2009-11-23 12:48:58.641031048 -0500
+--- blt2.4zYUM/src/bltGrMarker.c	2009-11-20 15:21:15.048031004 -0500
+***************
+*** 4306,4312 ****
+  	/* Save the old marker. */
+  	oldName = markerPtr->name;
+  	under = markerPtr->drawUnder;
+! 	if (Tk_ConfigureWidget(interp, graphPtr->tkwin, 
+  		markerPtr->classPtr->configSpecs, nOpts, options, 
+  		(char *)markerPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+--- 4306,4312 ----
+  	/* Save the old marker. */
+  	oldName = markerPtr->name;
+  	under = markerPtr->drawUnder;
+! 	if (Blt_ConfigureWidget(interp, graphPtr->tkwin, 
+  		markerPtr->classPtr->configSpecs, nOpts, options, 
+  		(char *)markerPtr, flags) != TCL_OK) {
+  	    return TCL_ERROR;
+diff -cr blt2.4z/src/bltGrPen.c blt2.4zYUM/src/bltGrPen.c
+*** blt2.4z/src/bltGrPen.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltGrPen.c	2009-11-22 14:50:51.168093956 -0500
+***************
+*** 215,221 ****
+      Tcl_FreeProc **freeProcPtr;	/* Not used. */
+  {
+      Pen *penPtr = *(Pen **)(widgRec + offset);
+! 
+      return penPtr->name;
+  }
+  
+--- 215,221 ----
+      Tcl_FreeProc **freeProcPtr;	/* Not used. */
+  {
+      Pen *penPtr = *(Pen **)(widgRec + offset);
+!     if ( ! penPtr ) return NULL;
+      return penPtr->name;
+  }
+  
+***************
+*** 510,516 ****
+  	    return Tk_ConfigureInfo(interp, graphPtr->tkwin, 
+  		    penPtr->configSpecs, (char *)penPtr, options[0], flags);
+  	}
+! 	if (Tk_ConfigureWidget(interp, graphPtr->tkwin, penPtr->configSpecs,
+  		nOpts, options, (char *)penPtr, flags) != TCL_OK) {
+  	    break;
+  	}
+--- 510,516 ----
+  	    return Tk_ConfigureInfo(interp, graphPtr->tkwin, 
+  		    penPtr->configSpecs, (char *)penPtr, options[0], flags);
+  	}
+! 	if (Blt_ConfigureWidget(interp, graphPtr->tkwin, penPtr->configSpecs,
+  		nOpts, options, (char *)penPtr, flags) != TCL_OK) {
+  	    break;
+  	}
+diff -cr blt2.4z/src/bltGrPs.c blt2.4zYUM/src/bltGrPs.c
+*** blt2.4z/src/bltGrPs.c	2002-08-09 21:29:33.000000000 -0400
+--- blt2.4zYUM/src/bltGrPs.c	2009-11-20 15:21:59.878031280 -0500
+***************
+*** 418,424 ****
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)psPtr, argv[3], flags);
+      }
+!     if (Tk_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)psPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 418,424 ----
+  	return Tk_ConfigureInfo(interp, graphPtr->tkwin, configSpecs,
+  		(char *)psPtr, argv[3], flags);
+      }
+!     if (Blt_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  	    argv + 3, (char *)psPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 1124,1130 ****
+  	    fileName = argv[3];	/* First argument is the file name. */
+  	    argv++, argc--;
+  	}
+! 	if (Tk_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  		argv + 3, (char *)psPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+--- 1124,1130 ----
+  	    fileName = argv[3];	/* First argument is the file name. */
+  	    argv++, argc--;
+  	}
+! 	if (Blt_ConfigureWidget(interp, graphPtr->tkwin, configSpecs, argc - 3,
+  		argv + 3, (char *)psPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	    return TCL_ERROR;
+  	}
+Only in blt2.4zYUM/src: bltHash.h
+diff -cr blt2.4z/src/bltHierbox.c blt2.4zYUM/src/bltHierbox.c
+*** blt2.4z/src/bltHierbox.c	2002-09-18 23:02:09.000000000 -0400
+--- blt2.4zYUM/src/bltHierbox.c	2009-11-20 15:22:26.282030334 -0500
+***************
+*** 3321,3327 ****
+      XColor *colorPtr;
+  
+      hierBox = hboxPtr;
+!     if (Tk_ConfigureWidget(hboxPtr->interp, hboxPtr->tkwin, entryConfigSpecs,
+  	    argc, argv, (char *)entryPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 3321,3327 ----
+      XColor *colorPtr;
+  
+      hierBox = hboxPtr;
+!     if (Blt_ConfigureWidget(hboxPtr->interp, hboxPtr->tkwin, entryConfigSpecs,
+  	    argc, argv, (char *)entryPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 3935,3941 ****
+      Tk_Uid nameId;
+      Pixmap bitmap;
+      hierBox = hboxPtr;
+!     if (Tk_ConfigureWidget(interp, hboxPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)hboxPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 3935,3941 ----
+      Tk_Uid nameId;
+      Pixmap bitmap;
+      hierBox = hboxPtr;
+!     if (Blt_ConfigureWidget(interp, hboxPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)hboxPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 4443,4449 ****
+      Drawable drawable;		/* Pixmap or window to draw into. */
+  {
+      Entry *entryPtr;		/* Entry to be drawn. */
+!     int x1, y1, x2, y2;
+      int height;
+      int x, y;
+  
+--- 4443,4449 ----
+      Drawable drawable;		/* Pixmap or window to draw into. */
+  {
+      Entry *entryPtr;		/* Entry to be drawn. */
+!     int x1, y1i, x2, y2;
+      int height;
+      int x, y;
+  
+***************
+*** 4463,4484 ****
+  	y += (height - hboxPtr->button.height) / 2;
+  	x1 = x2 = x + LEVELWIDTH(treePtr->level) +
+  	    LEVELWIDTH(treePtr->level + 1) / 2;
+! 	y1 = y + hboxPtr->button.height / 2;
+! 	y2 = y1 + entryPtr->lineHeight;
+  	if ((treePtr == hboxPtr->rootPtr) && (hboxPtr->hideRoot)) {
+! 	    y1 += entryPtr->height;
+  	}
+  	/*
+  	 * Clip the line's Y-coordinates at the window border.
+  	 */
+! 	if (y1 < 0) {
+! 	    y1 = 0;
+  	}
+  	if (y2 > Tk_Height(hboxPtr->tkwin)) {
+  	    y2 = Tk_Height(hboxPtr->tkwin);
+  	}
+! 	if ((y1 < Tk_Height(hboxPtr->tkwin)) && (y2 > 0)) {
+! 	    XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x1, y1, 
+  		      x2, y2);
+  	}
+      }
+--- 4463,4484 ----
+  	y += (height - hboxPtr->button.height) / 2;
+  	x1 = x2 = x + LEVELWIDTH(treePtr->level) +
+  	    LEVELWIDTH(treePtr->level + 1) / 2;
+! 	y1i = y + hboxPtr->button.height / 2;
+! 	y2 = y1i + entryPtr->lineHeight;
+  	if ((treePtr == hboxPtr->rootPtr) && (hboxPtr->hideRoot)) {
+! 	    y1i += entryPtr->height;
+  	}
+  	/*
+  	 * Clip the line's Y-coordinates at the window border.
+  	 */
+! 	if (y1i < 0) {
+! 	    y1i = 0;
+  	}
+  	if (y2 > Tk_Height(hboxPtr->tkwin)) {
+  	    y2 = Tk_Height(hboxPtr->tkwin);
+  	}
+! 	if ((y1i < Tk_Height(hboxPtr->tkwin)) && (y2 > 0)) {
+! 	    XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x1, y1i, 
+  		      x2, y2);
+  	}
+      }
+***************
+*** 4787,4803 ****
+  	    x, y);
+      }
+      if ((isFocused) && (hboxPtr->focusEdit) && (editPtr->cursorOn)) {
+! 	int x1, y1, x2, y2;
+  
+  	GetCursorLocation(hboxPtr, treePtr);
+  	x1 = x + editPtr->x;
+  	x2 = x1 + 3;
+! 	y1 = y + editPtr->y - 1;
+! 	y2 = y1 + editPtr->height - 1;
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+! 	    x1, y1, x1, y2);
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+! 	    x1 - 2, y1, x2, y1);
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+  	    x1 - 2, y2, x2, y2);
+      }
+--- 4787,4803 ----
+  	    x, y);
+      }
+      if ((isFocused) && (hboxPtr->focusEdit) && (editPtr->cursorOn)) {
+! 	int x1, y1i, x2, y2;
+  
+  	GetCursorLocation(hboxPtr, treePtr);
+  	x1 = x + editPtr->x;
+  	x2 = x1 + 3;
+! 	y1i = y + editPtr->y - 1;
+! 	y2 = y1i + editPtr->height - 1;
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+! 	    x1, y1i, x1, y2);
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+! 	    x1 - 2, y1i, x2, y1i);
+  	XDrawLine(hboxPtr->display, drawable, entryPtr->labelGC,
+  	    x1 - 2, y2, x2, y2);
+      }
+***************
+*** 4858,4864 ****
+      int width, height;
+      int entryHeight;
+      int buttonY;
+!     int x1, y1, x2, y2;
+      Entry *entryPtr;
+  
+      entryPtr = treePtr->entryPtr;
+--- 4858,4864 ----
+      int width, height;
+      int entryHeight;
+      int buttonY;
+!     int x1, y1i, x2, y2;
+      Entry *entryPtr;
+  
+      entryPtr = treePtr->entryPtr;
+***************
+*** 4874,4880 ****
+      buttonY = y + entryPtr->buttonY;
+  
+      x1 = x + (width / 2);
+!     y1 = y2 = buttonY + (buttonPtr->height / 2);
+      x2 = x1 + (LEVELWIDTH(treePtr->level) + LEVELWIDTH(treePtr->level + 1)) / 2;
+  
+      if ((treePtr->parentPtr != NULL) && (hboxPtr->lineWidth > 0)) {
+--- 4874,4880 ----
+      buttonY = y + entryPtr->buttonY;
+  
+      x1 = x + (width / 2);
+!     y1i = y2 = buttonY + (buttonPtr->height / 2);
+      x2 = x1 + (LEVELWIDTH(treePtr->level) + LEVELWIDTH(treePtr->level + 1)) / 2;
+  
+      if ((treePtr->parentPtr != NULL) && (hboxPtr->lineWidth > 0)) {
+***************
+*** 4882,4898 ****
+  	 * For every node except root, draw a horizontal line from
+  	 * the vertical bar to the middle of the icon.
+  	 */
+! 	XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x1, y1, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_OPEN) && (hboxPtr->lineWidth > 0)) {
+  	/*
+  	 * Entry is open, draw vertical line.
+  	 */
+! 	y2 = y1 + entryPtr->lineHeight;
+  	if (y2 > Tk_Height(hboxPtr->tkwin)) {
+  	    y2 = Tk_Height(hboxPtr->tkwin);	/* Clip line at window border. */
+  	}
+! 	XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x2, y1, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_BUTTON) && (treePtr->parentPtr != NULL)) {
+  	/*
+--- 4882,4898 ----
+  	 * For every node except root, draw a horizontal line from
+  	 * the vertical bar to the middle of the icon.
+  	 */
+! 	XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x1, y1i, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_OPEN) && (hboxPtr->lineWidth > 0)) {
+  	/*
+  	 * Entry is open, draw vertical line.
+  	 */
+! 	y2 = y1i + entryPtr->lineHeight;
+  	if (y2 > Tk_Height(hboxPtr->tkwin)) {
+  	    y2 = Tk_Height(hboxPtr->tkwin);	/* Clip line at window border. */
+  	}
+! 	XDrawLine(hboxPtr->display, drawable, hboxPtr->lineGC, x2, y1i, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_BUTTON) && (treePtr->parentPtr != NULL)) {
+  	/*
+***************
+*** 5505,5511 ****
+  	return Tk_ConfigureInfo(interp, hboxPtr->tkwin, buttonConfigSpecs,
+  	    (char *)hboxPtr, argv[0], 0);
+      }
+!     if (Tk_ConfigureWidget(hboxPtr->interp, hboxPtr->tkwin, buttonConfigSpecs,
+  	    argc, argv, (char *)hboxPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 5505,5511 ----
+  	return Tk_ConfigureInfo(interp, hboxPtr->tkwin, buttonConfigSpecs,
+  	    (char *)hboxPtr, argv[0], 0);
+      }
+!     if (Blt_ConfigureWidget(hboxPtr->interp, hboxPtr->tkwin, buttonConfigSpecs,
+  	    argc, argv, (char *)hboxPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltHtext.c blt2.4zYUM/src/bltHtext.c
+*** blt2.4z/src/bltHtext.c	2002-07-17 05:56:00.000000000 -0400
+--- blt2.4zYUM/src/bltHtext.c	2009-11-22 18:57:29.864093645 -0500
+***************
+*** 40,45 ****
+--- 40,52 ----
+   *    of the virtual text.
+   */
+  
++ /*
++  * the htext widget is broken in tk8.5.6 as
++  * Tk_ConfigureWidget no longer supports
++  * queries of changed options. Need to migrate to Tk_SetOptions
++  * instead hack a wrapper Blt_ConfigureWidget
++  */
++ 
+  #include "bltInt.h"
+  
+  #ifndef NO_HTEXT
+***************
+*** 338,344 ****
+  	TK_CONFIG_DONT_SET_DEFAULT, &heightOption},
+      {TK_CONFIG_CUSTOM, "-linespacing", "lineSpacing", "LineSpacing",
+  	DEF_HTEXT_LINE_SPACING, Tk_Offset(HText, leader),
+! 	TK_CONFIG_DONT_SET_DEFAULT, &bltDistanceOption},
+      {TK_CONFIG_CUSTOM, "-maxheight", "maxHeight", "MaxHeight",
+  	DEF_HTEXT_MAX_HEIGHT, Tk_Offset(HText, maxHeight),
+  	TK_CONFIG_DONT_SET_DEFAULT, &bltDistanceOption},
+--- 345,351 ----
+  	TK_CONFIG_DONT_SET_DEFAULT, &heightOption},
+      {TK_CONFIG_CUSTOM, "-linespacing", "lineSpacing", "LineSpacing",
+  	DEF_HTEXT_LINE_SPACING, Tk_Offset(HText, leader),
+!  	TK_CONFIG_DONT_SET_DEFAULT, &bltDistanceOption},
+      {TK_CONFIG_CUSTOM, "-maxheight", "maxHeight", "MaxHeight",
+  	DEF_HTEXT_MAX_HEIGHT, Tk_Offset(HText, maxHeight),
+  	TK_CONFIG_DONT_SET_DEFAULT, &bltDistanceOption},
+***************
+*** 2824,2832 ****
+--- 2831,2845 ----
+      Tk_GetFontMetrics(htPtr->font, &fontMetrics);
+      if ((segPtr->textEnd < htPtr->selFirst) ||
+  	(segPtr->textStart > htPtr->selLast)) {	/* No selected text */
++ #ifdef TK_DRAWCHARS_ANLGE
++ 	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
++ 	    htPtr->charArr + segPtr->textStart, textLength - 1,
++ 		     x, y + linePtr->baseline, 0.);
++ #else
+  	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
+  	    htPtr->charArr + segPtr->textStart, textLength - 1,
+  	    x, y + linePtr->baseline);
++ #endif
+  	return;
+      }
+      /*
+***************
+*** 2855,2863 ****
+--- 2868,2882 ----
+  	Tk_MeasureChars(htPtr->font, htPtr->charArr + segPtr->textStart,
+  	    nChars, 10000, DEF_TEXT_FLAGS, &lastX);
+  	lastX += x;
++ #ifdef TK_DRAWCHARS_ANGLE
++ 	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
++ 	    htPtr->charArr + segPtr->textStart, nChars, x,
++ 		     y + linePtr->baseline, 0.);
++ #else
+  	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
+  	    htPtr->charArr + segPtr->textStart, nChars, x,
+  	    y + linePtr->baseline);
++ #endif
+  	curPos = selStart;
+      }
+      if (selLength > 0) {	/* The selection itself */
+***************
+*** 2873,2888 ****
+--- 2892,2919 ----
+  	    lastX, y + linePtr->baseline - fontMetrics.ascent,
+  	    width, fontMetrics.linespace, htPtr->selBorderWidth,
+  	    TK_RELIEF_RAISED);
++ #ifdef TK_DRAWCHARS_ANGLE
++ 	Tk_DrawChars(htPtr->display, draw, htPtr->selectGC,
++ 	    htPtr->font, htPtr->charArr + selStart, selLength,
++ 		     lastX, y + linePtr->baseline, 0.);
++ #else
+  	Tk_DrawChars(htPtr->display, draw, htPtr->selectGC,
+  	    htPtr->font, htPtr->charArr + selStart, selLength,
+  	    lastX, y + linePtr->baseline);
++ #endif
+  	lastX = nextX;
+  	curPos = selStart + selLength;
+      }
+      nChars = segPtr->textEnd - curPos;
+      if (nChars > 0) {		/* Text following the selection */
++ #ifdef TK_DRAWCHARS_ANGLE
++ 	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
++ 		     htPtr->charArr + curPos, nChars - 1,
++ 		     lastX, y + linePtr->baseline, 0.);
++ #else
+  	Tk_DrawChars(htPtr->display, draw, htPtr->drawGC, htPtr->font,
+  	    htPtr->charArr + curPos, nChars - 1, lastX, y + linePtr->baseline);
++ #endif
+      }
+  }
+  
+***************
+*** 3038,3054 ****
+  	XFillRectangle(display, pixmap, htPtr->fillGC, 0, 0, width, height);
+      }
+  
+! 
+!     if (deltaY >= 0) {
+  	y += htPtr->lineArr[htPtr->first].offset;
+  	lineNum = htPtr->first;
+  	lastY = 0;
+!     } else {
+  	y += htPtr->lineArr[htPtr->last].offset;
+  	lineNum = htPtr->last;
+  	lastY = height;
+      }
+-     forceCopy = 0;
+  
+      /* Draw each line */
+      for (i = htPtr->first; i <= htPtr->last; i++) {
+--- 3069,3089 ----
+  	XFillRectangle(display, pixmap, htPtr->fillGC, 0, 0, width, height);
+      }
+  
+!     /* handle null lineArr */
+!     if (htPtr->arraySize > 0 && htPtr->nLines > 0) {
+!       if (deltaY >= 0) {
+  	y += htPtr->lineArr[htPtr->first].offset;
+  	lineNum = htPtr->first;
+  	lastY = 0;
+!       } else {
+  	y += htPtr->lineArr[htPtr->last].offset;
+  	lineNum = htPtr->last;
+  	lastY = height;
++       }
++       forceCopy = 0;
++     } else {
++       htPtr->last = htPtr->first - 1;
+      }
+  
+      /* Draw each line */
+      for (i = htPtr->first; i <= htPtr->last; i++) {
+***************
+*** 3347,3353 ****
+       * The page is always draw at full width and the viewport will clip
+       * the text.
+       */
+!     if ((htPtr->first != oldFirst) || (htPtr->last != oldLast)) {
+  	int offset;
+  	int i;
+  	int first, last;
+--- 3382,3389 ----
+       * The page is always draw at full width and the viewport will clip
+       * the text.
+       */
+!     if ((htPtr->first != oldFirst) || (htPtr->last != oldLast)
+! 	|| htPtr->flags & TEXT_DIRTY ) {
+  	int offset;
+  	int i;
+  	int first, last;
+***************
+*** 3364,3386 ****
+  	    first = oldFirst, last = oldLast;
+  	}
+  
+! 	for (i = first; i <= last; i++) {
+  	    offset = htPtr->lineArr[i].offset;
+  	    for (linkPtr = Blt_ChainFirstLink(htPtr->lineArr[i].chainPtr);
+! 		linkPtr != NULL; linkPtr = Blt_ChainNextLink(linkPtr)) {
+! 		winPtr = Blt_ChainGetValue(linkPtr);
+! 		if (winPtr->tkwin != NULL) {
+! 		    MoveEmbeddedWidget(winPtr, offset);
+! 		    winPtr->flags &= ~WIDGET_VISIBLE;
+! 		}
+  	    }
+  	}
+!     }
+!     DrawPage(htPtr, deltaY);
+!     SendBogusEvent(tkwin);
+  
+!     /* Reset flags */
+!     htPtr->flags &= ~TEXT_DIRTY;
+  }
+  
+  /* Selection Procedures */
+--- 3400,3425 ----
+  	    first = oldFirst, last = oldLast;
+  	}
+  
+! 
+! 	if (htPtr->arraySize > 0 && htPtr->nLines > 0) {
+! 	  for (i = first; i <= last; i++) {
+  	    offset = htPtr->lineArr[i].offset;
+  	    for (linkPtr = Blt_ChainFirstLink(htPtr->lineArr[i].chainPtr);
+! 		 linkPtr != NULL; linkPtr = Blt_ChainNextLink(linkPtr)) {
+! 	      winPtr = Blt_ChainGetValue(linkPtr);
+! 	      if (winPtr->tkwin != NULL) {
+! 		MoveEmbeddedWidget(winPtr, offset);
+! 		winPtr->flags &= ~WIDGET_VISIBLE;
+! 	      }
+  	    }
++ 	  }
+  	}
+! 	DrawPage(htPtr, deltaY);
+! 	SendBogusEvent(tkwin);
+  
+! 	/* Reset flags */
+! 	htPtr->flags &= ~TEXT_DIRTY;
+!     }
+  }
+  
+  /* Selection Procedures */
+***************
+*** 3900,3906 ****
+      if (winPtr == NULL) {
+  	return TCL_ERROR;
+      }
+!     if (Tk_ConfigureWidget(interp, htPtr->tkwin, widgetConfigSpecs,
+  	    argc - 3, argv + 3, (char *)winPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 3939,3945 ----
+      if (winPtr == NULL) {
+  	return TCL_ERROR;
+      }
+!     if (Blt_ConfigureWidget(interp, htPtr->tkwin, widgetConfigSpecs,
+  	    argc - 3, argv + 3, (char *)winPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 4070,4077 ****
+  	return Tk_ConfigureInfo(interp, htPtr->tkwin, specsPtr, itemPtr,
+  		argv[2], 0);
+      }
+!     if (Tk_ConfigureWidget(interp, htPtr->tkwin, specsPtr, argc - 2,
+! 	    argv + 2, itemPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+      if (itemPtr == (char *)htPtr) {
+--- 4109,4121 ----
+  	return Tk_ConfigureInfo(interp, htPtr->tkwin, specsPtr, itemPtr,
+  		argv[2], 0);
+      }
+!     if (Blt_ConfigureWidget(interp, htPtr->tkwin, specsPtr, argc - 2,
+!     	    argv + 2, itemPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+! 
+!       /*
+!        * in 8.5 cant tell if in option was modified
+!        * supposed to convert to Tk_SetOptions
+!        */
+  	return TCL_ERROR;
+      }
+      if (itemPtr == (char *)htPtr) {
+***************
+*** 4468,4474 ****
+  #ifdef ITCL_NAMESPACES
+      Itk_SetWidgetCommand(htPtr->tkwin, htPtr->cmdToken);
+  #endif
+!     if ((Tk_ConfigureWidget(interp, htPtr->tkwin, configSpecs, argc - 2,
+  		argv + 2, (char *)htPtr, 0) != TCL_OK) ||
+  	(ConfigureText(interp, htPtr) != TCL_OK)) {
+  	Tk_DestroyWindow(htPtr->tkwin);
+--- 4512,4518 ----
+  #ifdef ITCL_NAMESPACES
+      Itk_SetWidgetCommand(htPtr->tkwin, htPtr->cmdToken);
+  #endif
+!     if ((Blt_ConfigureWidget(interp, htPtr->tkwin, configSpecs, argc - 2,
+  		argv + 2, (char *)htPtr, 0) != TCL_OK) ||
+  	(ConfigureText(interp, htPtr) != TCL_OK)) {
+  	Tk_DestroyWindow(htPtr->tkwin);
+diff -cr blt2.4z/src/bltInt.h blt2.4zYUM/src/bltInt.h
+*** blt2.4z/src/bltInt.h	2002-08-21 16:13:12.000000000 -0400
+--- blt2.4zYUM/src/bltInt.h	2009-11-20 15:12:17.310031325 -0500
+***************
+*** 724,729 ****
+--- 724,733 ----
+  extern Tk_OptionParseProc Blt_StringToEnum;
+  extern Tk_OptionPrintProc Blt_EnumToString;
+  
++ extern int Blt_ConfigureWidget _ANSI_ARGS_((Tcl_Interp *interp,
++        Tk_Window tkwin, Tk_ConfigSpec *specs, int argc, char **argv,
++        char *widgRec, int flags));
++ 
+  extern int Blt_ConfigModified _ANSI_ARGS_(TCL_VARARGS(Tk_ConfigSpec *, specs));
+  
+  extern void Blt_DStringAppendElements _ANSI_ARGS_(TCL_VARARGS(Tcl_DString *, args));
+diff -cr blt2.4z/src/bltNsUtil.c blt2.4zYUM/src/bltNsUtil.c
+*** blt2.4z/src/bltNsUtil.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltNsUtil.c	2009-11-18 09:39:03.917094184 -0500
+***************
+*** 286,292 ****
+  				 * this "real" command. */
+  } Command;
+  
+! 
+  struct VarTrace;
+  struct ArraySearch;
+  
+--- 286,292 ----
+  				 * this "real" command. */
+  } Command;
+  
+! /*
+  struct VarTrace;
+  struct ArraySearch;
+  
+***************
+*** 340,359 ****
+      }
+      return varPtr->value.tablePtr;
+  }
+  
+  Tcl_Namespace *
+  Blt_GetVariableNamespace(interp, name)
+      Tcl_Interp *interp;
+      CONST char *name;
+  {
+!     Var *varPtr;
+  
+!     varPtr = (Var *)Tcl_FindNamespaceVar(interp, (char *)name, 
+! 	(Tcl_Namespace *)NULL, 0);
+!     if (varPtr == NULL) {
+! 	return NULL;
+!     }
+!     return varPtr->nsPtr;
+  }
+  
+  /*ARGSUSED*/
+--- 340,370 ----
+      }
+      return varPtr->value.tablePtr;
+  }
++ */
+  
++ /*
++  * Yes ever dangerous not to use public API. Private Var has changed
++  * rewrite using namespace which -variable command
++  */
+  Tcl_Namespace *
+  Blt_GetVariableNamespace(interp, name)
+      Tcl_Interp *interp;
+      CONST char *name;
+  {
+!   Tcl_Namespace *nsPtr ;
+!   const char *qualName, *nsName ;
+!   static char nswhich[] = "namespace which -variable " ;
+! 
+!   if ( name == NULL ) { return NULL ; }
+!   if ( Tcl_VarEval(interp, nswhich, name, (char*)NULL) != TCL_OK ) 
+!     { return NULL ; }
+!   if ( (qualName = Tcl_GetStringResult(interp)) == NULL ||
+!        strlen(qualName) < 1 ) { return NULL ; }
+  
+!   if ( Blt_ParseQualifiedName(interp, qualName, &nsPtr, &nsName) != TCL_OK )
+!     { return NULL ; }
+! 
+!   return nsPtr;
+  }
+  
+  /*ARGSUSED*/
+diff -cr blt2.4z/src/bltScrollbar.c blt2.4zYUM/src/bltScrollbar.c
+*** blt2.4z/src/bltScrollbar.c	2002-07-17 18:38:54.000000000 -0400
+--- blt2.4zYUM/src/bltScrollbar.c	2009-11-20 15:22:58.935031197 -0500
+***************
+*** 814,820 ****
+      XGCValues gcValues;
+      GC new;
+  
+!     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)scrollPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 814,820 ----
+      XGCValues gcValues;
+      GC new;
+  
+!     if (Blt_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)scrollPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltSpline.c blt2.4zYUM/src/bltSpline.c
+*** blt2.4z/src/bltSpline.c	2002-07-17 05:56:01.000000000 -0400
+--- blt2.4zYUM/src/bltSpline.c	2009-11-17 11:59:54.729031269 -0500
+***************
+*** 228,241 ****
+      int which;
+  {
+      if ((which == 3) || (which == 4)) {	/* Parameters used in both 3 and 4 */
+! 	double mbar1, mbar2, mbar3, c1, d1, h1, j1, k1;
+  
+  	c1 = p->x + (q->y - p->y) / m1;
+  	d1 = q->x + (p->y - q->y) / m2;
+  	h1 = c1 * 2.0 - p->x;
+! 	j1 = d1 * 2.0 - q->x;
+  	mbar1 = (q->y - p->y) / (h1 - p->x);
+! 	mbar2 = (p->y - q->y) / (j1 - q->x);
+  
+  	if (which == 4) {	/* Case 4. */
+  	    Y1 = (p->x + c1) / 2.0;
+--- 228,241 ----
+      int which;
+  {
+      if ((which == 3) || (which == 4)) {	/* Parameters used in both 3 and 4 */
+! 	double mbar1, mbar2, mbar3, c1, d1, h1, j1d, k1;
+  
+  	c1 = p->x + (q->y - p->y) / m1;
+  	d1 = q->x + (p->y - q->y) / m2;
+  	h1 = c1 * 2.0 - p->x;
+! 	j1d = d1 * 2.0 - q->x;
+  	mbar1 = (q->y - p->y) / (h1 - p->x);
+! 	mbar2 = (p->y - q->y) / (j1d - q->x);
+  
+  	if (which == 4) {	/* Case 4. */
+  	    Y1 = (p->x + c1) / 2.0;
+diff -cr blt2.4z/src/bltTable.c blt2.4zYUM/src/bltTable.c
+*** blt2.4z/src/bltTable.c	2002-10-14 19:31:24.000000000 -0400
+--- blt2.4zYUM/src/bltTable.c	2009-11-20 15:23:33.994031152 -0500
+***************
+*** 1201,1207 ****
+      oldRowSpan = entryPtr->row.span;
+      oldColSpan = entryPtr->column.span;
+  
+!     if (Tk_ConfigureWidget(interp, entryPtr->tkwin, entryConfigSpecs,
+  	    argc, argv, (char *)entryPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1201,1207 ----
+      oldRowSpan = entryPtr->row.span;
+      oldColSpan = entryPtr->column.span;
+  
+!     if (Blt_ConfigureWidget(interp, entryPtr->tkwin, entryConfigSpecs,
+  	    argc, argv, (char *)entryPtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 1553,1559 ****
+  		return Tk_ConfigureInfo(tablePtr->interp, tablePtr->tkwin,
+  		    infoPtr->configSpecs, (char *)rcPtr, argv[0], 0);
+  	    } else {
+! 		if (Tk_ConfigureWidget(tablePtr->interp, tablePtr->tkwin,
+  			infoPtr->configSpecs, argc, argv, (char *)rcPtr,
+  			TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  		    return TCL_ERROR;
+--- 1553,1559 ----
+  		return Tk_ConfigureInfo(tablePtr->interp, tablePtr->tkwin,
+  		    infoPtr->configSpecs, (char *)rcPtr, argv[0], 0);
+  	    } else {
+! 		if (Blt_ConfigureWidget(tablePtr->interp, tablePtr->tkwin,
+  			infoPtr->configSpecs, argc, argv, (char *)rcPtr,
+  			TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  		    return TCL_ERROR;
+***************
+*** 1578,1584 ****
+  	}
+  	rcPtr = GetRowColumn(infoPtr, n);
+  	assert(rcPtr);
+! 	if (Tk_ConfigureWidget(tablePtr->interp, tablePtr->tkwin,
+  	       infoPtr->configSpecs, argc, argv, (char *)rcPtr,
+  	       TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	    return TCL_ERROR;
+--- 1578,1584 ----
+  	}
+  	rcPtr = GetRowColumn(infoPtr, n);
+  	assert(rcPtr);
+! 	if (Blt_ConfigureWidget(tablePtr->interp, tablePtr->tkwin,
+  	       infoPtr->configSpecs, argc, argv, (char *)rcPtr,
+  	       TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	    return TCL_ERROR;
+***************
+*** 1861,1867 ****
+  	return Tk_ConfigureInfo(interp, tablePtr->tkwin, tableConfigSpecs,
+  	    (char *)tablePtr, argv[0], 0);
+      }
+!     if (Tk_ConfigureWidget(interp, tablePtr->tkwin, tableConfigSpecs,
+  	    argc, argv, (char *)tablePtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1861,1867 ----
+  	return Tk_ConfigureInfo(interp, tablePtr->tkwin, tableConfigSpecs,
+  	    (char *)tablePtr, argv[0], 0);
+      }
+!     if (Blt_ConfigureWidget(interp, tablePtr->tkwin, tableConfigSpecs,
+  	    argc, argv, (char *)tablePtr, TK_CONFIG_ARGV_ONLY) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 2198,2204 ****
+  	}
+      }
+      if (argc > 0) {
+! 	result = Tk_ConfigureWidget(tablePtr->interp, entryPtr->tkwin,
+  	    entryConfigSpecs, argc, argv, (char *)entryPtr,
+  	    TK_CONFIG_ARGV_ONLY);
+      }
+--- 2198,2204 ----
+  	}
+      }
+      if (argc > 0) {
+! 	result = Blt_ConfigureWidget(tablePtr->interp, entryPtr->tkwin,
+  	    entryConfigSpecs, argc, argv, (char *)entryPtr,
+  	    TK_CONFIG_ARGV_ONLY);
+      }
+diff -cr blt2.4z/src/bltTabnotebook.c blt2.4zYUM/src/bltTabnotebook.c
+*** blt2.4z/src/bltTabnotebook.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltTabnotebook.c	2009-11-20 15:23:58.074030731 -0500
+***************
+*** 2766,2772 ****
+      GC newGC;
+  
+      lastNotebookInstance = nbPtr;
+!     if (Tk_ConfigureWidget(interp, nbPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)nbPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 2766,2772 ----
+      GC newGC;
+  
+      lastNotebookInstance = nbPtr;
+!     if (Blt_ConfigureWidget(interp, nbPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)nbPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 3691,3697 ****
+  	}
+  	Tcl_Preserve(tabPtr);
+  	lastNotebookInstance = nbPtr;
+! 	result = Tk_ConfigureWidget(interp, nbPtr->tkwin, tabConfigSpecs,
+  	    nOpts, options, (char *)tabPtr, TK_CONFIG_ARGV_ONLY);
+  	if (result == TCL_OK) {
+  	    result = ConfigureTab(nbPtr, tabPtr);
+--- 3691,3697 ----
+  	}
+  	Tcl_Preserve(tabPtr);
+  	lastNotebookInstance = nbPtr;
+! 	result = Blt_ConfigureWidget(interp, nbPtr->tkwin, tabConfigSpecs,
+  	    nOpts, options, (char *)tabPtr, TK_CONFIG_ARGV_ONLY);
+  	if (result == TCL_OK) {
+  	    result = ConfigureTab(nbPtr, tabPtr);
+diff -cr blt2.4z/src/bltTabset.c blt2.4zYUM/src/bltTabset.c
+*** blt2.4z/src/bltTabset.c	2002-09-18 18:30:51.000000000 -0400
+--- blt2.4zYUM/src/bltTabset.c	2009-11-20 15:24:19.674092934 -0500
+***************
+*** 2812,2818 ****
+      GC newGC;
+  
+      tabSet = setPtr;
+!     if (Tk_ConfigureWidget(interp, setPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)setPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 2812,2818 ----
+      GC newGC;
+  
+      tabSet = setPtr;
+!     if (Blt_ConfigureWidget(interp, setPtr->tkwin, configSpecs, argc, argv,
+  	    (char *)setPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 3818,3824 ****
+  	}
+  	tabSet = setPtr;
+  	Tcl_Preserve(tabPtr);
+! 	result = Tk_ConfigureWidget(interp, setPtr->tkwin, tabConfigSpecs,
+  	    nOpts, options, (char *)tabPtr, TK_CONFIG_ARGV_ONLY);
+  	if (result == TCL_OK) {
+  	    result = ConfigureTab(setPtr, tabPtr);
+--- 3818,3824 ----
+  	}
+  	tabSet = setPtr;
+  	Tcl_Preserve(tabPtr);
+! 	result = Blt_ConfigureWidget(interp, setPtr->tkwin, tabConfigSpecs,
+  	    nOpts, options, (char *)tabPtr, TK_CONFIG_ARGV_ONLY);
+  	if (result == TCL_OK) {
+  	    result = ConfigureTab(setPtr, tabPtr);
+diff -cr blt2.4z/src/bltTed.c blt2.4zYUM/src/bltTed.c
+*** blt2.4z/src/bltTed.c	2002-05-16 16:46:00.000000000 -0400
+--- blt2.4zYUM/src/bltTed.c	2009-11-20 15:24:42.393030827 -0500
+***************
+*** 826,832 ****
+      GC newGC;
+      unsigned long gcMask;
+  
+!     if (Tk_ConfigureWidget(tedPtr->interp, tedPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)tedPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 826,832 ----
+      GC newGC;
+      unsigned long gcMask;
+  
+!     if (Blt_ConfigureWidget(tedPtr->interp, tedPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)tedPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltText.c blt2.4zYUM/src/bltText.c
+*** blt2.4z/src/bltText.c	2009-11-23 12:48:58.642031190 -0500
+--- blt2.4zYUM/src/bltText.c	2009-11-22 18:52:05.460093733 -0500
+***************
+*** 35,62 ****
+  static int initialized;
+  
+  static void
+! DrawTextLayout(display, drawable, gc, font, x, y, textPtr)
+      Display *display;
+      Drawable drawable;
+      GC gc;
+      Tk_Font font;
+      register int x, y;		/* Origin of text */
+      TextLayout *textPtr;
+  {
+      register TextFragment *fragPtr;
+      register int i;
+  
+      fragPtr = textPtr->fragArr;
+      for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
+  #if HAVE_UTF
+  	Tk_DrawChars(display, drawable, gc, font, fragPtr->text,
+  	    fragPtr->count, x + fragPtr->x, y + fragPtr->y);
+  #else
+  	XDrawString(display, drawable, gc, x + fragPtr->x, y + fragPtr->y,
+  	    fragPtr->text, fragPtr->count);
+- #endif /*HAVE_UTF*/
+      }
+  }
+  
+  /*
+   * -----------------------------------------------------------------
+--- 35,230 ----
+  static int initialized;
+  
+  static void
+! Blt_AverageImage(im, w, h, d)
+!      XImage *im;
+!      unsigned int w, h, d;
+! {
+!   /* the image will end up with 1 or 0 in the first plane, rest zero */
+!   int i, j, k;
+!   unsigned int d2;
+!   unsigned long pixel, pixelave;
+! 
+!   d2 = (3*d)/4;
+!   for (i=0 ; i<w ; i++) {
+!     for (j=0 ; j<h ; j++) {
+!       pixel = XGetPixel(im, i, j);
+!       pixelave = pixel & 1;
+!       for (k=1 ; k<d ; k++) {
+! 	pixel >>= 1;
+! 	pixelave += pixel & 1;
+!       }
+!       pixelave = (pixelave + d2)/d;
+!       XPutPixel(im, i, j, pixelave);
+!     }
+!   }
+!   return;
+! }
+! 
+! static void
+! Blt_DrawCharsBitmap(display, bitmap, w, width, height, gc, font, x, y, textPtr)
+!     Display *display;
+!     Drawable bitmap;
+!     Window w;
+!     unsigned int width, height;
+!     GC gc;
+!     Tk_Font font;
+!     register int x, y;
+!     TextLayout *textPtr;
+! {
+!   register TextFragment *fragPtr;
+!   register int i, j;
+! 
+!   XImage *bitmapimage, *pixmapimage;
+!   GC gcsave, gcp;
+!   Window winr;
+!   int xr, yr;
+!   unsigned int wr, hr, br, dr;
+!   Pixmap pixmap;
+!   unsigned long whitepixel;
+!   XGCValues gcvalues ;
+!   unsigned long valuemask, pixel ;
+! 
+!   /* save the GC */
+!   gcsave = XCreateGC(display, bitmap, 0, NULL);
+!   XCopyGC(display, gc, 0, gcsave);
+!   /* create a pixmap to draw chars to */
+!   XGetGeometry(display, w, &winr, &xr, &yr, &wr, &hr, &br, &dr);
+!   pixmap = Tk_GetPixmap(display, winr, width, height, dr);
+!   /* get a GC for the pixmap, black(0) background, white(1) chars */
+!   valuemask = (GCForeground|GCBackground) ;
+!   gcvalues.foreground = gcvalues.background = 0 ;
+!   gcp = XCreateGC(display, pixmap, valuemask, &gcvalues);
+!   XSetForeground(display, gcp, 0) ;
+!   XFillRectangle(display, pixmap, gcp, 0, 0, width, height);
+!   whitepixel = XWhitePixel(display, 0);
+!   XSetForeground(display, gcp, whitepixel) ;
+!   /* draw white chars to the pixmap */
+!   fragPtr = textPtr->fragArr;
+!   for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
+! #ifdef TK_DRAWCHARS_ANGLE
+!     Tk_DrawChars(display, pixmap, gcp, font, fragPtr->text,
+! 		 fragPtr->count, x + fragPtr->x, y + fragPtr->y, 0);
+! #else
+!     Tk_DrawChars(display, pixmap, gcp, font, fragPtr->text,
+! 		 fragPtr->count, x + fragPtr->x, y + fragPtr->y);
+! #endif
+!   }
+!   XFlush(display);
+!   /* get the pixmap image */
+!   pixmapimage = XGetImage(display, pixmap, 0, 0, width, height,
+! 			  AllPlanes, XYPixmap);
+!   /* average the image to get the char in a single bit plane */
+!   Blt_AverageImage(pixmapimage, width, height, dr);
+!   /* get an image for the bitmap */
+!   bitmapimage = XGetImage(display, bitmap, 0, 0, width, height,
+! 			  1, XYPixmap);
+!   /* copy the first bit plane from the averaged pixmap to the bitmap */
+!   for (i=0 ; i<width ; i++) {
+!     for(j=0 ; j<height ; j++) {
+!       pixel = XGetPixel(pixmapimage, i, j);
+!       XPutPixel(bitmapimage, i, j, pixel);
+!     }
+!   }
+!   /* but the bitmapimage into the bitmap with gc fg=1 bg=0 clipmask=None */
+!   XSetForeground(display, gc, 1);
+!   XSetBackground(display, gc, 0);
+!   XSetClipMask(display, gc, None);
+!   XPutImage(display, bitmap, gc, bitmapimage, 0, 0, 0, 0, width, height);
+!   /* reset gc and clean up */
+!   XCopyGC(display, gcsave, 0, gc);
+!   XFreeGC(display, gcp);
+!   XFreeGC(display, gcsave);
+!   XDestroyImage(bitmapimage);
+!   XDestroyImage(pixmapimage);
+!   Tk_FreePixmap(display, pixmap);
+!   return;
+! }
+! 
+! #ifdef TK_DRAWCHARS_ANGLE
+! static void
+! DrawTextLayout(display, drawable, gc, font, x, y, textPtr, angle)
+      Display *display;
+      Drawable drawable;
+      GC gc;
+      Tk_Font font;
+      register int x, y;		/* Origin of text */
+      TextLayout *textPtr;
++     double angle;
+  {
+      register TextFragment *fragPtr;
+      register int i;
+  
++ #if HAVE_UTF
++     /*
++      * Tk_DrawChars no longer works on bitmaps for antialiased fonts
++      * Fix this by checking for a bitmap and calling code that
++      * DrawChars to bitmap
++      */
++     Window w;
++     int xd, yd;
++     unsigned int wd, hd, bd, dd;
++     XGetGeometry(display, drawable, &w, &xd, &yd, &wd, &hd, &bd, &dd);
++     if ( dd == 1 ) {
++       Blt_DrawCharsBitmap(display, drawable, w, wd, hd, gc, font,
++ 			  x, y, textPtr);
++       return;
++     }
++     fragPtr = textPtr->fragArr;
++     for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
++ 	Tk_DrawChars(display, drawable, gc, font, fragPtr->text,
++ 		     fragPtr->count, x + fragPtr->x, y + fragPtr->y, angle);
++     }
++ #else
+      fragPtr = textPtr->fragArr;
+      for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
++ 	XDrawString(display, drawable, gc, x + fragPtr->x, y + fragPtr->y,
++ 	    fragPtr->text, fragPtr->count);
++     }
++ #endif /*HAVE_UTF*/
++ }
++ 
++ #else  /* no angled drawing in Tk_DrawChars */
++ static void
++ DrawTextLayout(display, drawable, gc, font, x, y, textPtr)
++     Display *display;
++     Drawable drawable;
++     GC gc;
++     Tk_Font font;
++     register int x, y;		/* Origin of text */
++     TextLayout *textPtr;
++ {
++     register TextFragment *fragPtr;
++     register int i;
++ 
+  #if HAVE_UTF
++     /*
++      * Tk_DrawChars no longer works on bitmaps for antialiased fonts
++      * Fix this by checking for a bitmap and calling code that
++      * DrawChars to bitmap
++      */
++     Window w;
++     int xd, yd;
++     unsigned int wd, hd, bd, dd;
++     XGetGeometry(display, drawable, &w, &xd, &yd, &wd, &hd, &bd, &dd);
++     if ( dd == 1 ) {
++       Blt_DrawCharsBitmap(display, drawable, w, wd, hd, gc, font,
++ 			  x, y, textPtr);
++       return;
++     }
++     fragPtr = textPtr->fragArr;
++     for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
+  	Tk_DrawChars(display, drawable, gc, font, fragPtr->text,
+  	    fragPtr->count, x + fragPtr->x, y + fragPtr->y);
++     }
+  #else
++     fragPtr = textPtr->fragArr;
++     for (i = 0; i < textPtr->nFrags; i++, fragPtr++) {
+  	XDrawString(display, drawable, gc, x + fragPtr->x, y + fragPtr->y,
+  	    fragPtr->text, fragPtr->count);
+      }
++ #endif /*HAVE_UTF*/
+  }
++ #endif /* TK_DRAWCHARS_ANGLE */
+  
+  /*
+   * -----------------------------------------------------------------
+***************
+*** 657,662 ****
+--- 825,913 ----
+   *
+   * -----------------------------------------------------------------
+   */
++ 
++ #ifdef TK_DRAWCHARS_ANGLE
++ void
++ Blt_DrawTextLayout(tkwin, drawable, textPtr, tsPtr, x, y)
++     Tk_Window tkwin;
++     Drawable drawable;
++     TextLayout *textPtr;
++     TextStyle *tsPtr;		/* Text attribute information */
++     int x, y;			/* Window coordinates to draw text */
++ {
++     int width, height;
++     double theta;
++     Display *display;
++     Pixmap bitmap;
++     int active;
++ 
++     if (!textPtr)
++ 	return;
++     
++     display = Tk_Display(tkwin);
++     theta = FMOD(tsPtr->theta, (double)360.0);
++     if (theta < 0.0) {
++ 	theta += 360.0;
++     }
++ 
++ #ifdef WIN32
++     if ( theta > 0. ) {
++       if (Blt_DrawRotatedText(display, drawable, x, y, theta, tsPtr, textPtr)) {
++ 	return;
++       }
++     }
++ #endif
++ 
++     active = tsPtr->state & STATE_ACTIVE;
++ 
++     width = textPtr->width, height = textPtr->height;
++     Blt_TranslateAnchor(x, y, width, height, tsPtr->anchor, &x, &y);
++     if (tsPtr->state & (STATE_DISABLED | STATE_EMPHASIS)) {
++       TkBorder *borderPtr = (TkBorder *) tsPtr->border;
++       XColor *color1, *color2;
++ 
++       color1 = borderPtr->lightColor, color2 = borderPtr->darkColor;
++       if (tsPtr->state & STATE_EMPHASIS) {
++ 	XColor *hold;
++ 	
++ 	hold = color1, color1 = color2, color2 = hold;
++       }
++       if (color1 != NULL) {
++ 	XSetForeground(display, tsPtr->gc, color1->pixel);
++       }
++       DrawTextLayout(display, drawable, tsPtr->gc, tsPtr->font, x + 1, 
++ 		     y + 1, textPtr, theta);
++       if (color2 != NULL) {
++ 	XSetForeground(display, tsPtr->gc, color2->pixel);
++       }
++       DrawTextLayout(display, drawable, tsPtr->gc, tsPtr->font, x, y, 
++ 		     textPtr, theta);
++       
++       /* Reset the foreground color back to its original setting,
++        * so not to invalidate the GC cache. */
++       XSetForeground(display, tsPtr->gc, tsPtr->color->pixel);
++       
++       return;		/* Done */
++     }
++     if ((tsPtr->shadow.offset > 0) && (tsPtr->shadow.color != NULL)) {
++       XSetForeground(display, tsPtr->gc, tsPtr->shadow.color->pixel);
++       DrawTextLayout(display, drawable, tsPtr->gc, tsPtr->font, 
++ 		     x + tsPtr->shadow.offset, y + tsPtr->shadow.offset,
++ 		     textPtr, theta);
++       XSetForeground(display, tsPtr->gc, tsPtr->color->pixel);
++     }
++     if (active) {
++       XSetForeground(display, tsPtr->gc, tsPtr->activeColor->pixel);
++     }
++     DrawTextLayout(display, drawable, tsPtr->gc, tsPtr->font, x, y, 
++ 		   textPtr, theta);
++     if (active) {
++       XSetForeground(display, tsPtr->gc, tsPtr->color->pixel);
++     }
++     return;			/* Done */
++ }
++ 
++ #else  /* NO TK_DRAWCHARS_ANGLE */
+  void
+  Blt_DrawTextLayout(tkwin, drawable, textPtr, tsPtr, x, y)
+      Tk_Window tkwin;
+***************
+*** 798,803 ****
+--- 1049,1055 ----
+      XSetClipMask(display, tsPtr->gc, None);
+      Tk_FreePixmap(display, bitmap);
+  }
++ #endif   /* TK_DRAWCHARS_ANGLE */
+  
+  void
+  Blt_DrawText2(tkwin, drawable, string, tsPtr, x, y, areaPtr)
+diff -cr blt2.4z/src/bltTreeView.c blt2.4zYUM/src/bltTreeView.c
+*** blt2.4z/src/bltTreeView.c	2009-11-23 12:48:23.244031007 -0500
+--- blt2.4zYUM/src/bltTreeView.c	2009-11-17 12:20:56.268030432 -0500
+***************
+*** 4023,4029 ****
+  {
+      int height, level;
+      int x, y;
+!     int x1, y1, x2, y2;
+  
+      while (entryPtr != tvPtr->rootPtr) {
+  	entryPtr = Blt_TreeViewParentEntry(entryPtr);
+--- 4023,4029 ----
+  {
+      int height, level;
+      int x, y;
+!     int x1, y1i, x2, y2;
+  
+      while (entryPtr != tvPtr->rootPtr) {
+  	entryPtr = Blt_TreeViewParentEntry(entryPtr);
+***************
+*** 4043,4066 ****
+  		tvPtr->button.height);
+  	y += (height - tvPtr->button.height) / 2;
+  	x1 = x2 = x + ICONWIDTH(level) + ICONWIDTH(level + 1) / 2;
+! 	y1 = y + tvPtr->button.height / 2;
+! 	y2 = y1 + entryPtr->vertLineLength;
+  	if ((entryPtr == tvPtr->rootPtr) && (tvPtr->flags & TV_HIDE_ROOT)) {
+! 	    y1 += entryPtr->height;
+  	}
+  	/*
+  	 * Clip the line's Y-coordinates at the viewport borders.
+  	 */
+! 	if (y1 < 0) {
+! 	    y1 = (y1 & 0x1);	/* Make sure the dotted line starts on 
+  				 * the same even/odd pixel. */
+  	}
+  	if (y2 > Tk_Height(tvPtr->tkwin)) {
+  	    y2 = Tk_Height(tvPtr->tkwin);
+  	}
+! 	if ((y1 < Tk_Height(tvPtr->tkwin)) && (y2 > 0)) {
+  	    XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, 
+! 	      x1, y1, x2, y2);
+  	}
+      }
+  }
+--- 4043,4066 ----
+  		tvPtr->button.height);
+  	y += (height - tvPtr->button.height) / 2;
+  	x1 = x2 = x + ICONWIDTH(level) + ICONWIDTH(level + 1) / 2;
+! 	y1i = y + tvPtr->button.height / 2;
+! 	y2 = y1i + entryPtr->vertLineLength;
+  	if ((entryPtr == tvPtr->rootPtr) && (tvPtr->flags & TV_HIDE_ROOT)) {
+! 	    y1i += entryPtr->height;
+  	}
+  	/*
+  	 * Clip the line's Y-coordinates at the viewport borders.
+  	 */
+! 	if (y1i < 0) {
+! 	    y1i = (y1i & 0x1);	/* Make sure the dotted line starts on 
+  				 * the same even/odd pixel. */
+  	}
+  	if (y2 > Tk_Height(tvPtr->tkwin)) {
+  	    y2 = Tk_Height(tvPtr->tkwin);
+  	}
+! 	if ((y1i < Tk_Height(tvPtr->tkwin)) && (y2 > 0)) {
+  	    XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, 
+! 	      x1, y1i, x2, y2);
+  	}
+      }
+  }
+***************
+*** 4072,4085 ****
+      TreeViewColumn *columnPtr,
+      Drawable drawable)		/* Pixmap or window to draw into. */
+  {
+!     int x, y1, y2;
+  
+      x = SCREENX(tvPtr, columnPtr->worldX) + 
+  	columnPtr->width + tvPtr->ruleMark - tvPtr->ruleAnchor - 1;
+  
+!     y1 = tvPtr->titleHeight + tvPtr->inset;
+      y2 = Tk_Height(tvPtr->tkwin) - tvPtr->inset;
+!     XDrawLine(tvPtr->display, drawable, columnPtr->ruleGC, x, y1, x, y2);
+      tvPtr->flags = TOGGLE(tvPtr->flags, TV_RULE_ACTIVE);
+  }
+  
+--- 4072,4085 ----
+      TreeViewColumn *columnPtr,
+      Drawable drawable)		/* Pixmap or window to draw into. */
+  {
+!     int x, y1i, y2;
+  
+      x = SCREENX(tvPtr, columnPtr->worldX) + 
+  	columnPtr->width + tvPtr->ruleMark - tvPtr->ruleAnchor - 1;
+  
+!     y1i = tvPtr->titleHeight + tvPtr->inset;
+      y2 = Tk_Height(tvPtr->tkwin) - tvPtr->inset;
+!     XDrawLine(tvPtr->display, drawable, columnPtr->ruleGC, x, y1i, x, y2);
+      tvPtr->flags = TOGGLE(tvPtr->flags, TV_RULE_ACTIVE);
+  }
+  
+***************
+*** 4527,4533 ****
+      int level;
+      int width, height;
+      int x, y;
+!     int x1, y1, x2, y2;
+  
+      entryPtr->flags &= ~ENTRY_REDRAW;
+  
+--- 4527,4533 ----
+      int level;
+      int width, height;
+      int x, y;
+!     int x1, y1i, x2, y2;
+  
+      entryPtr->flags &= ~ENTRY_REDRAW;
+  
+***************
+*** 4545,4551 ****
+      buttonY = y + entryPtr->buttonY;
+  
+      x1 = x + (width / 2);
+!     y1 = y2 = buttonY + (buttonPtr->height / 2);
+      x2 = x1 + (ICONWIDTH(level) + ICONWIDTH(level + 1)) / 2;
+  
+      if ((Blt_TreeNodeParent(entryPtr->node) != NULL) && 
+--- 4545,4551 ----
+      buttonY = y + entryPtr->buttonY;
+  
+      x1 = x + (width / 2);
+!     y1i = y2 = buttonY + (buttonPtr->height / 2);
+      x2 = x1 + (ICONWIDTH(level) + ICONWIDTH(level + 1)) / 2;
+  
+      if ((Blt_TreeNodeParent(entryPtr->node) != NULL) && 
+***************
+*** 4554,4570 ****
+  	 * For every node except root, draw a horizontal line from
+  	 * the vertical bar to the middle of the icon.
+  	 */
+! 	XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, x1, y1, x2, y2);
+      }
+      if (((entryPtr->flags & ENTRY_CLOSED) == 0) && (tvPtr->lineWidth > 0)) {
+  	/*
+  	 * Entry is open, draw vertical line.
+  	 */
+! 	y2 = y1 + entryPtr->vertLineLength;
+  	if (y2 > Tk_Height(tvPtr->tkwin)) {
+  	    y2 = Tk_Height(tvPtr->tkwin); /* Clip line at window border. */
+  	}
+! 	XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, x2, y1, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_HAS_BUTTON) && (entryPtr != tvPtr->rootPtr)) {
+  	/*
+--- 4554,4570 ----
+  	 * For every node except root, draw a horizontal line from
+  	 * the vertical bar to the middle of the icon.
+  	 */
+! 	XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, x1, y1i, x2, y2);
+      }
+      if (((entryPtr->flags & ENTRY_CLOSED) == 0) && (tvPtr->lineWidth > 0)) {
+  	/*
+  	 * Entry is open, draw vertical line.
+  	 */
+! 	y2 = y1i + entryPtr->vertLineLength;
+  	if (y2 > Tk_Height(tvPtr->tkwin)) {
+  	    y2 = Tk_Height(tvPtr->tkwin); /* Clip line at window border. */
+  	}
+! 	XDrawLine(tvPtr->display, drawable, tvPtr->lineGC, x2, y1i, x2, y2);
+      }
+      if ((entryPtr->flags & ENTRY_HAS_BUTTON) && (entryPtr != tvPtr->rootPtr)) {
+  	/*
+diff -cr blt2.4z/src/bltTreeViewEdit.c blt2.4zYUM/src/bltTreeViewEdit.c
+*** blt2.4z/src/bltTreeViewEdit.c	2002-09-14 16:07:43.000000000 -0400
+--- blt2.4zYUM/src/bltTreeViewEdit.c	2009-11-22 18:59:46.071093980 -0500
+***************
+*** 1177,1185 ****
+--- 1177,1191 ----
+  	rightPos = count;
+  	if ((rightPos < tbPtr->selFirst) || (leftPos > tbPtr->selLast)) {
+  	    /* No part of the text fragment is selected. */
++ #ifdef TK_DRAWCHARS_ANGLE
++ 	    Tk_DrawChars(tbPtr->display, drawable, tbPtr->gc, 
++ 			 tbPtr->font, fragPtr->text, fragPtr->count, 
++ 			 x + fragPtr->x, y + fragPtr->y, 0.);
++ #else
+  	    Tk_DrawChars(tbPtr->display, drawable, tbPtr->gc, 
+  			 tbPtr->font, fragPtr->text, fragPtr->count, 
+  			 x + fragPtr->x, y + fragPtr->y);
++ #endif
+  	    continue;
+  	}
+  
+***************
+*** 1221,1229 ****
+--- 1227,1241 ----
+  	        width, fontMetrics.linespace,
+  		tbPtr->selBorderWidth, tbPtr->selRelief);
+  	}
++ #ifdef TK_DRAWCHARS_ANGLE
++ 	Tk_DrawChars(Tk_Display(tbPtr->tkwin), drawable, tbPtr->gc, 
++ 	     tbPtr->font, fragPtr->text, fragPtr->count, 
++ 		     fragPtr->x + x, fragPtr->y + y, 0.);
++ #else
+  	Tk_DrawChars(Tk_Display(tbPtr->tkwin), drawable, tbPtr->gc, 
+  	     tbPtr->font, fragPtr->text, fragPtr->count, 
+  	     fragPtr->x + x, fragPtr->y + y);
++ #endif
+      }
+      if ((tbPtr->flags & TEXTBOX_FOCUS) && (tbPtr->cursorOn)) {
+  	int left, top, right, bottom;
+diff -cr blt2.4z/src/bltTreeViewStyle.c blt2.4zYUM/src/bltTreeViewStyle.c
+*** blt2.4z/src/bltTreeViewStyle.c	2002-07-22 18:18:40.000000000 -0400
+--- blt2.4zYUM/src/bltTreeViewStyle.c	2009-11-17 12:19:45.771030906 -0500
+***************
+*** 846,851 ****
+--- 846,856 ----
+   *----------------------------------------------------------------------
+   */
+  /*ARGSUSED*/
++ 
++ int
++ Blt_TreeViewTextbox(TreeView *tvPtr,
++ 		    TreeViewEntry *entryPtr,
++ 		    TreeViewColumn *columnPtr);
+  static int
+  EditTextBox(tvPtr, entryPtr, valuePtr, stylePtr)
+      TreeView *tvPtr;
+diff -cr blt2.4z/src/bltUnixDnd.c blt2.4zYUM/src/bltUnixDnd.c
+*** blt2.4z/src/bltUnixDnd.c	2002-07-13 20:08:56.000000000 -0400
+--- blt2.4zYUM/src/bltUnixDnd.c	2009-11-20 15:25:09.355030437 -0500
+***************
+*** 1834,1840 ****
+      unsigned long gcMask;
+  
+      Tk_MakeWindowExist(tokenPtr->tkwin);
+!     if (Tk_ConfigureWidget(interp, tokenPtr->tkwin, tokenConfigSpecs, argc, 
+  		argv, (char *)tokenPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1834,1840 ----
+      unsigned long gcMask;
+  
+      Tk_MakeWindowExist(tokenPtr->tkwin);
+!     if (Blt_ConfigureWidget(interp, tokenPtr->tkwin, tokenConfigSpecs, argc, 
+  		argv, (char *)tokenPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 3777,3783 ****
+  	return Tk_ConfigureInfo(interp, dndPtr->tkwin, configSpecs,
+  	    (char *)dndPtr, argv[3], flags);
+      } 
+!     if (Tk_ConfigureWidget(interp, dndPtr->tkwin, configSpecs, argc - 3,
+  		   argv + 3, (char *)dndPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 3777,3783 ----
+  	return Tk_ConfigureInfo(interp, dndPtr->tkwin, configSpecs,
+  	    (char *)dndPtr, argv[3], flags);
+      } 
+!     if (Blt_ConfigureWidget(interp, dndPtr->tkwin, configSpecs, argc - 3,
+  		   argv + 3, (char *)dndPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+***************
+*** 4440,4446 ****
+      dndPtr->hashPtr = hPtr;
+      dndPtr->dataPtr = dataPtr;
+      Blt_SetHashValue(hPtr, dndPtr);
+!     if (Tk_ConfigureWidget(interp, dndPtr->tkwin, configSpecs, argc - 3,
+  	   argv + 3, (char *)dndPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 4440,4446 ----
+      dndPtr->hashPtr = hPtr;
+      dndPtr->dataPtr = dataPtr;
+      Blt_SetHashValue(hPtr, dndPtr);
+!     if (Blt_ConfigureWidget(interp, dndPtr->tkwin, configSpecs, argc - 3,
+  	   argv + 3, (char *)dndPtr, 0) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+diff -cr blt2.4z/src/bltWinDraw.c blt2.4zYUM/src/bltWinDraw.c
+*** blt2.4z/src/bltWinDraw.c	2002-09-07 16:38:08.000000000 -0400
+--- blt2.4zYUM/src/bltWinDraw.c	2009-11-22 19:01:17.494093033 -0500
+***************
+*** 1647,1654 ****
+--- 1647,1659 ----
+      if (drawable == None) {
+  	return;
+      }
++ #ifdef TK_DRAWCHARS_ANGLE
++     Tk_DrawChars(display, drawable, gc, (Tk_Font)gc->font, string, length, 
++ 		 x, y, 0.);
++ #else
+      Tk_DrawChars(display, drawable, gc, (Tk_Font)gc->font, string, length, 
+  	x, y);
++ #endif
+  }
+  
+  static void
+Only in blt2.4zYUM/src: Makefile
+Only in blt2.4z/src: pure_api.c
+Only in blt2.4zYUM/src/shared: Makefile
+diff -cr blt2.4z/src/tkButton.c blt2.4zYUM/src/tkButton.c
+*** blt2.4z/src/tkButton.c	2002-09-23 03:19:01.000000000 -0400
+--- blt2.4zYUM/src/tkButton.c	2009-11-20 15:25:31.178093577 -0500
+***************
+*** 1104,1110 ****
+  	    TCL_GLOBAL_ONLY | TCL_TRACE_WRITES | TCL_TRACE_UNSETS,
+  	    ButtonVarProc, (ClientData)butPtr);
+      }
+!     if (Tk_ConfigureWidget(interp, butPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)butPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }
+--- 1104,1110 ----
+  	    TCL_GLOBAL_ONLY | TCL_TRACE_WRITES | TCL_TRACE_UNSETS,
+  	    ButtonVarProc, (ClientData)butPtr);
+      }
+!     if (Blt_ConfigureWidget(interp, butPtr->tkwin, configSpecs,
+  	    argc, argv, (char *)butPtr, flags) != TCL_OK) {
+  	return TCL_ERROR;
+      }

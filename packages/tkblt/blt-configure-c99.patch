@@ -1,0 +1,115 @@
+Most of these issues are in autoconf-generated code and have already
+been fixed upstream.  The remaining issue has been submitted as:
+
+  <https://sourceforge.net/p/blt/patches/36/>
+
+diff --git a/configure b/configure
+index 3b7d5a3b30eeaa2a..25e968d1c0687800 100755
+--- a/configure
++++ b/configure
+@@ -975,7 +975,7 @@ cat > conftest.$ac_ext << EOF
+ #line 976 "configure"
+ #include "confdefs.h"
+ 
+-main(){return(0);}
++int main(){return(0);}
+ EOF
+ if { (eval echo configure:981: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   ac_cv_prog_cc_works=yes
+@@ -1660,8 +1660,8 @@ else
+ #define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
+ #define XOR(e, f) (((e) && !(f)) || (!(e) && (f)))
+ int main () { int i; for (i = 0; i < 256; i++)
+-if (XOR (islower (i), ISLOWER (i)) || toupper (i) != TOUPPER (i)) exit(2);
+-exit (0); }
++if (XOR (islower (i), ISLOWER (i)) || toupper (i) != TOUPPER (i)) return 2;
++return 0; }
+ 
+ EOF
+ if { (eval echo configure:1668: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+@@ -2371,12 +2371,12 @@ else
+ #line 2372 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+-main()
++int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+-  if (!f) exit(1);
++  if (!f) return 1;
+   fprintf(f, "%d\n", sizeof(int));
+-  exit(0);
++  return 0;
+ }
+ EOF
+ if { (eval echo configure:2383: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+@@ -2410,12 +2410,12 @@ else
+ #line 2411 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+-main()
++int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+-  if (!f) exit(1);
++  if (!f) return 1;
+   fprintf(f, "%d\n", sizeof(long));
+-  exit(0);
++  return 0;
+ }
+ EOF
+ if { (eval echo configure:2422: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+@@ -2449,12 +2449,12 @@ else
+ #line 2450 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+-main()
++int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+-  if (!f) exit(1);
++  if (!f) return 1;
+   fprintf(f, "%d\n", sizeof(long long));
+-  exit(0);
++  return 0;
+ }
+ EOF
+ if { (eval echo configure:2461: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+@@ -2488,12 +2488,12 @@ else
+ #line 2489 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+-main()
++int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+-  if (!f) exit(1);
++  if (!f) return 1;
+   fprintf(f, "%d\n", sizeof(void *));
+-  exit(0);
++  return 0;
+ }
+ EOF
+ if { (eval echo configure:2500: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+@@ -3031,7 +3031,7 @@ if test "$ac_x_libraries" = NO; then
+ cat > conftest.$ac_ext <<EOF
+ #line 3033 "configure"
+ #include "confdefs.h"
+-
++char XtMalloc(void);
+ int main() {
+ ${x_direct_test_function}()
+ ; return 0; }
+diff --git a/configure.in b/configure.in
+index 29600cbb868b0faa..7ea11f4c5ec8ecfe 100644
+--- a/configure.in
++++ b/configure.in
+@@ -350,7 +350,7 @@ if test "${blt_cv_found_dbl_epsilon}" = "no" ; then
+   CFLAGS="-g -lm"
+   AC_MSG_CHECKING([whether DBL_EPSILON can be computed])
+   AC_TRY_RUN_WITH_OUTPUT(blt_cv_dbl_epsilon, [
+-main () {
++int main () {
+     double e, u;
+     /* 
+      *	Check the smallest value such that 1.0 + x != 1.0.

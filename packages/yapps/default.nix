@@ -2,6 +2,8 @@
 python3Full.pkgs.buildPythonPackage {
   pname = "yapps";
   version = "2.2.0";
+  pyproject = true;
+  build-system = [ python3Full.pkgs.setuptools ];
   src = fetchFromGitHub {
     owner = "smurfix";
     repo = "yapps";
