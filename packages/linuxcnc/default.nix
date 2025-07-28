@@ -33,18 +33,17 @@
   boost,
   espeak,
   gst_all_1,
-  python3Full,
+  python3,
   yapps,
   gobject-introspection,
-  libGLU,
-  xorg,
+  libGLU, xorg,
   libepoxy,
   hicolor-icon-theme,
   glxinfo,
   bash
 }:
 let
-  pythonPkg = (python3Full.withPackages (ps: [
+  pythonPkg = (python3.withPackages (ps: [
     yapps
     ps.pyopengl
     ps.pygobject3
@@ -57,8 +56,10 @@ let
     ps.gst-python
     ps.xlib
     ps.qscintilla
+    ps.boost
+    ps.tkinter
   ]));
-  boost_python = (boost.override { enablePython = true; python = pythonPkg; });
+  # boost_python = (boost.override { enablePython = true; python = pythonPkg; });
 in
 stdenv.mkDerivation rec {
   hardeningDisable = [ "all" ];
@@ -88,7 +89,7 @@ stdenv.mkDerivation rec {
   buildInputs = [
     libtool pkg-config libtirpc systemd libmodbus libusb1 glib gtk2 gtk3 procps kmod sysctl util-linux
     psmisc intltool tcl tk bwidget tkimg tclx tkblt pango cairo pythonPkg.pkgs.pygobject3 gobject-introspection
-    boost_python pythonPkg.pkgs.boost pythonPkg qt5.qtbase espeak gst_all_1.gstreamer
+    pythonPkg.pkgs.boost pythonPkg qt5.qtbase espeak gst_all_1.gstreamer
     ncurses readline_5 libGLU xorg.libXmu libepoxy hicolor-icon-theme glxinfo
   ];
 
@@ -124,7 +125,7 @@ stdenv.mkDerivation rec {
   configureFlags = [
     "--with-tclConfig=${tcl}/lib/tclConfig.sh"
     "--with-tkConfig=${tk}/lib/tkConfig.sh"
-    "--with-boost-libdir=${boost_python}/lib"
+    "--with-boost-libdir=${pythonPkg.pkgs.boost}/lib"
     "--with-boost-python=boost_python3"
     "--with-locale-dir=$(out)/locale"
     "--exec-prefix=${placeholder "out"}"

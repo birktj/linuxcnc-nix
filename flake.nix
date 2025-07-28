@@ -1,15 +1,13 @@
 {
-  inputs = {
-    nixpkgs.url = "nixpkgs/nixos-25.05";
-    flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
-    
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-  };
-  outputs = { self, nixpkgs, flake-compat, nixos-hardware }@inputs:
+    inputs = {
+        nixpkgs.url = "nixpkgs/nixos-25.05";
+        flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
+    };
+    outputs = { self, nixpkgs, flake-compat, nixos-hardware }@inputs:
     let
-      systems = nixpkgs.lib.platforms.linux;
-      lib = nixpkgs.lib;
-      packagePaths = lib.mapAttrs (n: v: "${./packages}/${n}") (lib.filterAttrs (n: v: v == "directory" && (builtins.readDir "${./packages}/${n}") ? "default.nix") (builtins.readDir ./packages));
+        systems = nixpkgs.lib.platforms.linux;
+        lib = nixpkgs.lib;
+        packagePaths = lib.mapAttrs (n: v: "${./packages}/${n}") (lib.filterAttrs (n: v: v == "directory" && (builtins.readDir "${./packages}/${n}") ? "default.nix") (builtins.readDir ./packages));
     in rec {
       packages = lib.genAttrs systems (system: lib.mapAttrs (n:  v: lib.callPackageWith ((lib.recursiveUpdate packages.${system} nixpkgs.legacyPackages.${system}) // { inherit inputs; inherit system; }) v {}) packagePaths);
       legacyPackages = packages;
@@ -17,24 +15,13 @@
       nixosModules = { linuxcnc = import ./modules/linuxcnc.nix; };
 
 
-      nixosConfigurations.flap-display-controller = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.rpi-linuxcnc = nixpkgs.lib.nixosSystem {
             modules = [
                 "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-                "${nixos-hardware}/raspberry-pi/4/pkgs-overlays.nix"
                 self.nixosModules.linuxcnc
                 ({pkgs, ...}: {
                     nixpkgs.overlays = [
                         self.overlay
-                        (final: prev: {
-                            python312 = prev.python312.override {
-                                packageOverrides = pyself: pysuper: {
-                                    psutil = pysuper.psutil.overrideAttrs (_: {
-                                        # doCheck = false;
-                                        # doInstallCheck = false;
-                                    });
-                                };
-                            };
-                        })
                     ];
 
                     # nixpkgs.buildPlatform = "x86_64-linux";
@@ -75,28 +62,15 @@
                     environment.systemPackages = with pkgs; [
                         vim
                         helix
-                        picocom
-                        i2c-tools
-                        dtc
-                        flap-display-controller
                     ];
 
                     # Setup network
-                    networking.wireless = {
-                        enable = true;
-                        networks.ArkytaNett.psk = "froskspikerpistolvannkanne";
-                    };
-                    networking.hostName = "flap-display-controller";
+                    # networking.wireless = {
+                    #     enable = true;
+                    #     networks.ArkytaNett.psk = "froskspikerpistolvannkanne";
+                    # };
+                    # networking.hostName = "flap-display-controller";
 
-                    # Setup RTC
-                    hardware.raspberry-pi."4".apply-overlays-dtmerge.enable = true;
-                    hardware.deviceTree = {
-                        enable = true;
-                        overlays = [
-                            { name = "i2c-rtc"; dtsFile = ./nix/rtc/i2c-rtc.dts; }
-                        ];
-                    };
-                    
                     nixpkgs.hostPlatform.system = "aarch64-linux";
                     # nixpkgs.buildPlatform.system = "x86_64-linux";
                     system.stateVersion = "23.11";
@@ -106,6 +80,6 @@
             ];
        };
 
-        images.flap-display-controller = self.nixosConfigurations.flap-display-controller.config.system.build.sdImage;
+        images.rpi-linuxcnc = self.nixosConfigurations.rpi-linuxcnc.config.system.build.sdImage;
     };
 }

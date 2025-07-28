@@ -1,9 +1,9 @@
-{ fetchFromGitHub, python3Full }:
-python3Full.pkgs.buildPythonPackage {
+{ fetchFromGitHub, python3 }:
+python3.pkgs.buildPythonPackage {
   pname = "yapps";
   version = "2.2.0";
   pyproject = true;
-  build-system = [ python3Full.pkgs.setuptools ];
+  build-system = [ python3.pkgs.setuptools ];
   src = fetchFromGitHub {
     owner = "smurfix";
     repo = "yapps";
