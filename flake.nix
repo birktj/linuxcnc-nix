@@ -37,7 +37,19 @@
                         };
                     };
                     nix.settings.trusted-users = ["@wheel"];
-                    
+
+                    services.xserver = {
+    enable = true;
+    desktopManager = {
+      xterm.enable = false;
+      xfce.enable = true;
+    };
+  };
+services.displayManager = {
+defaultSession = "xfce";
+	autoLogin.enable = true;
+	autoLogin.user = "birk";
+}                    ;
                     security.sudo = {
                         enable = true;
                         wheelNeedsPassword = false;
@@ -53,6 +65,13 @@
                         ];
                     };
 
+                    # Realtime kernel
+                    boot.kernelPackages = pkgs.linuxPackages-rt_latest;
+                    boot.kernelParams = [
+                        "isolcpus=2,3"
+                        "nohz_full=2,3"  
+                    ];
+
                     # Setup openssh
                     services.openssh.enable = true;
                     networking.firewall.allowedTCPPorts = [
@@ -62,6 +81,7 @@
                     environment.systemPackages = with pkgs; [
                         vim
                         helix
+                        htop
                     ];
 
                     # Setup network

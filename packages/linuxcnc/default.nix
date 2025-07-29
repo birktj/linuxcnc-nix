@@ -156,7 +156,7 @@ stdenv.mkDerivation rec {
     for prog in $(find $out/bin -type f ! \( ${lib.concatMapStringsSep " -o " (f: "-name " + f + " ") setuidApps} \)); do
       wrapProgram "$prog" \
         --prefix PATH : ${lib.makeBinPath [tk glxinfo]} \
-        --prefix TCLLIBPATH ' ' "$out/lib/tcltk/linuxcnc ${tk}/lib ${tcl}/lib ${tclx}/lib ${tkblt}/lib ${tkimg}/lib ${bwidget}/lib/bwidget${bwidget.version}" \
+        --prefix TCLLIBPATH ' ' "$out/lib/tcltk/linuxcnc ${tk}/lib ${tcl}/lib ${tclx}/lib ${tkblt}/lib/tcl8.6/blt2.4 ${tkimg}/lib ${bwidget}/lib/bwidget${bwidget.version}" \
         --prefix PYTHONPATH : "${pythonPkg}/${pythonPkg.sitePackages}:$out/${pythonPkg.sitePackages}" \
         "''${gappsWrapperArgs[@]}" \
         "''${qtWrapperArgs[@]}"
