@@ -1,7 +1,7 @@
 { lib, fetchurl, tcl, tk, xorg }:
 tcl.mkTclDerivation rec {
   pname = "tkblt";
-  version = "2.4";
+  version = "2.5.3";
 
   src = fetchurl {
     url = "http://downloads.sourceforge.net/blt/BLT2.4z.tar.gz";
@@ -20,6 +20,7 @@ tcl.mkTclDerivation rec {
     ./blt2.4z-tcl8.6.patch
     ./blt2.4z-tk8.6.patch
     ./blt-configure-c99.patch
+    ./solib-deps.patch
   ];
 
   postPatch = ''

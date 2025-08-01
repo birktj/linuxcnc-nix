@@ -1,0 +1,16 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2837";
+
+	fragment@0 {
+		target-path = "/soc";
+		__overlay__ {
+			gpiomem {
+				compatible = "brcm,bcm2835-gpiomem";
+				reg = <0x7e200000 0x1000>;
+			};
+		};
+	};
+};

@@ -1,9 +1,9 @@
 {
     inputs = {
         nixpkgs.url = "nixpkgs/nixos-25.05";
-        flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
+        nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     };
-    outputs = { self, nixpkgs, flake-compat, nixos-hardware }@inputs:
+    outputs = { self, nixpkgs, nixos-hardware }@inputs:
     let
         systems = nixpkgs.lib.platforms.linux;
         lib = nixpkgs.lib;
@@ -18,8 +18,9 @@
       nixosConfigurations.rpi-linuxcnc = nixpkgs.lib.nixosSystem {
             modules = [
                 "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+                "${nixos-hardware}/raspberry-pi/4/default.nix"
                 self.nixosModules.linuxcnc
-                ({pkgs, ...}: {
+                ({pkgs, config, ...}: {
                     nixpkgs.overlays = [
                         self.overlay
                     ];
@@ -38,12 +39,24 @@
                     };
                     nix.settings.trusted-users = ["@wheel"];
 
+                    boot.initrd.availableKernelModules = [
+                    "vc4" "bcm2835_dma" "i2c_bcm2835"
+                      ];
+
                     services.xserver = {
     enable = true;
     desktopManager = {
       xterm.enable = false;
       xfce.enable = true;
     };
+     extraConfig = ''
+    Section "OutputClass"
+      Identifier "vc4"
+      MatchDriver "vc4"
+      Driver "modesetting"
+      Option "PrimaryGPU" "true"
+    EndSection
+  '';
   };
 services.displayManager = {
 defaultSession = "xfce";
@@ -58,7 +71,7 @@ defaultSession = "xfce";
 
                     users.users.birk = {
                         isNormalUser = true;
-                        extraGroups = [ "wheel" "dialout" ]; # Enable ‘sudo’ for the user.
+                        extraGroups = [ "wheel" "dialout" "kmem" "gpio" "plugdev" ]; # Enable ‘sudo’ for the user.
                         openssh.authorizedKeys.keys = [ 
                             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBrvdnfRte2aM39d+GdUVt+KI6HqP8opmmuxYXKdBMzF birk@erebus"
                             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOuZp5Quo2ubCkxqX6D1DIqKVf+p98ffcNg6f9M6Nc9X birk@granite"
@@ -67,10 +80,75 @@ defaultSession = "xfce";
 
                     # Realtime kernel
                     boot.kernelPackages = pkgs.linuxPackages-rt_latest;
-                    boot.kernelParams = [
-                        "isolcpus=2,3"
-                        "nohz_full=2,3"  
+
+                    boot.extraModulePackages = [
+                        (pkgs.bcm2835-gpiomem.override { linuxPackages = config.boot.kernelPackages; })
                     ];
+
+                    boot.kernelModules = [ "bcm2835-gpiomem" ];
+
+                    # Realtime config:
+                    # https://dantalion.nl/2024/09/29/linuxcnc-latency-jitter-kernel-parameter-tuning.html
+                    # https://manuel.bernhardt.io/posts/2023-11-16-core-pinning/
+                    boot.kernelParams = [
+                        # Run kernel on cores 0 and 1
+                        "irqaffinity=0,1"
+                        "kthread_cpus=0,1"
+
+                        "rcu_nocb_poll"
+                        "rcu_nocbs=2,3"
+                        "isolcpus=managed_irq,domain,2,3"
+                        "nohz=on"
+                        "nohz_full=2,3"  
+                        
+                        "skew_tick=1"
+                        "nosmt=force"
+                        "nosoftlockup"
+                        "nowatchdog"
+
+                        # "cpufreq.off=1"
+                        # "cpuidle.off=1"
+
+                        "iomem=relaxed"
+                        "strict-devmem=0"
+
+                        "cma=256M"
+
+                        "lapic"
+                        "noxsave"
+                        "acpi_osi="
+                        "idle=poll"
+                        "acpi_irq_nobalance"
+                        "noirqbalance"
+                        "vmalloc=32MB"
+                        "clocksource=acpi_pm"
+
+                        "video=DSI-1:720x1280@60"
+                    ];
+                    boot.kernel.sysctl."kernel.timer_migration" = 0;
+                    boot.kernel.sysctl."kernel.sched_rt_runtime_us" = -1;
+
+
+                    # GPIO
+                  users.groups.kmem = {};
+                  users.groups.gpio = {};
+                  users.groups.plugdev = {};
+                  services.udev.extraRules = ''
+                    SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
+                    SUBSYSTEM=="bcm2835-gpiomem", KERNEL=="gpiomem", GROUP="gpio", MODE="0660"
+                    ACTION=="add", KERNEL=="mem", MODE="0660"
+                  '';
+
+                    hardware.deviceTree = {
+                        enable = true;
+                        overlays = [
+                            { name = "gpiomem"; dtsFile = ./gpiomem.dts; }
+                            { name = "vc4-kms-dsi-ili9881-7inch-overlay"; dtsFile = ./vc4-kms-dsi-ili9881-7inch-overlay.dts; }
+                        ];
+                    };
+                    hardware.raspberry-pi."4".apply-overlays-dtmerge.enable = true;
+
+                    # hardware.raspberry-pi."4".fkms-3d.enable = true;
 
                     # Setup openssh
                     services.openssh.enable = true;
@@ -82,6 +160,9 @@ defaultSession = "xfce";
                         vim
                         helix
                         htop
+                        rt-tests
+                        dtc
+                        libraspberrypi
                     ];
 
                     # Setup network

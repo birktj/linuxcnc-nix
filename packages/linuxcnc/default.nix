@@ -40,6 +40,9 @@
   libepoxy,
   hicolor-icon-theme,
   glxinfo,
+  asciidoc,
+  groff,
+  libgpiod,
   bash
 }:
 let
@@ -65,14 +68,16 @@ stdenv.mkDerivation rec {
   hardeningDisable = [ "all" ];
   enableParalellBuilding = true;
   pname = "linuxcnc";
-  version = "2.9-git";
+  version = "2.9.4";
   name = "${pname}-${version}";
+
+  enableParallelBuilding = true;
 
   src = fetchFromGitHub {
     owner = "LinuxCNC";
     repo = "linuxcnc";
-    rev = "f77537cd4d4dc6191d4bb981e0e1c9d897039fc6";
-    sha256 = "05kuTx2J7wdrcoUQ8Tengb0ohXAeGjZV9g9XriWgQL4=";
+    rev = "v2.9.4";
+    sha256 = "sha256-E74Kh5TqWPAQ22ohgLsYICNqYgOuhAwK2JJ+/1TfgU4=";
   };
 
   nativeBuildInputs = [
@@ -81,6 +86,8 @@ stdenv.mkDerivation rec {
     wrapGAppsHook
     qt5.wrapQtAppsHook
     gobject-introspection
+    asciidoc
+    groff
   ];
 
   dontWrapGApps = true;
@@ -90,7 +97,7 @@ stdenv.mkDerivation rec {
     libtool pkg-config libtirpc systemd libmodbus libusb1 glib gtk2 gtk3 procps kmod sysctl util-linux
     psmisc intltool tcl tk bwidget tkimg tclx tkblt pango cairo pythonPkg.pkgs.pygobject3 gobject-introspection
     pythonPkg.pkgs.boost pythonPkg qt5.qtbase espeak gst_all_1.gstreamer
-    ncurses readline_5 libGLU xorg.libXmu libepoxy hicolor-icon-theme glxinfo
+    ncurses readline_5 libGLU xorg.libXmu libepoxy hicolor-icon-theme glxinfo libgpiod
   ];
 
   preAutoreconf = ''
@@ -98,13 +105,14 @@ stdenv.mkDerivation rec {
     cd ./src
 
     # make halcmd search for setuid apps on PATH, to find setuid wrappers
-    substituteInPlace hal/utils/halcmd_commands.c --replace 'EMC2_BIN_DIR "/' '"'
+    substituteInPlace hal/utils/halcmd_commands.cc --replace 'EMC2_BIN_DIR "/' '"'
   '';
 
   patches = [
     ./fix_make.patch          # Some lines don't respect --prefix
     ./pncconf_paths.patch     # Corrects a search path in pncconf
     ./rtapi_app_setuid.patch  # Remove hard coded checks for setuid from rtapi_app
+    ./cpuinfo.patch
   ];
 
   postAutoreconf = ''
@@ -139,9 +147,10 @@ stdenv.mkDerivation rec {
   preInstall = ''
     # Stop the Makefile attempting to set ownship+perms, it fails on NixOS
     sed -i -e 's/chown.*//' -e 's/-o root//g' -e 's/-m [0-9]\+//g' Makefile
+    substituteInPlace Makefile --replace '/usr/share/applications' '$(prefix)/share/applications'
   '';
 
-  installFlags = [ "SITEPY=${placeholder "out"}/${pythonPkg.sitePackages}" ];
+  installFlags = [ "SITEPY=${placeholder "out"}/${pythonPkg.sitePackages}" ]; # "DESTDIR=${placeholder "out"}" "prefix=" "bindir=/bin" "libdir=/lib" ];
 
   postInstall = ''
     mkdir -p "$out/firmware/hm2"
